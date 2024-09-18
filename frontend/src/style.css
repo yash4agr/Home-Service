@@ -1,79 +1,101 @@
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&display=swap");
+
+/* CSS Variables */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Common variables */
+  --header-height: 20px;
+  --body-font: "Syne", sans-serif;
+  --h2-font-size: 1.25rem;
+  --normal-font-size: 0.938rem;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semi-bold: 600;
+  --z-fixed: 100;
+  --z-modal: 1000;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Light mode colors */
+  --first-color: hsl(230, 75%, 56%);
+  --title-color: hsl(230, 75%, 15%);
+  --text-color: hsl(230, 12%, 40%);
+  --body-color: hsl(230, 100%, 98%);
+  --container-color: hsl(230, 100%, 97%);
+  --border-color: hsl(230, 25%, 80%);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* Dark mode colors */
+[data-theme="dark"] {
+  --first-color: hsl(230, 75%, 56%);
+  --title-color: hsl(230, 75%, 95%);
+  --text-color: hsl(230, 12%, 75%);
+  --body-color: hsl(230, 25%, 15%);
+  --container-color: hsl(230, 25%, 20%);
+  --border-color: hsl(230, 25%, 30%);
 }
-a:hover {
-  color: #535bf2;
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body,
+input,
+button {
+  font-family: var(--body-font);
+  font-size: var(--normal-font-size);
+  transition: background-color .3s ease, color .3s ease;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: var(--body-color);
+  color: var(--text-color);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+input,
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  border: none;
+  outline: none;
 }
 
-.card {
-  padding: 2em;
+ul {
+  list-style: none;
 }
 
-#app {
-  max-width: 1280px;
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Reusable classes */
+.container {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0 15px;
 }
 
-@media (prefers-color-scheme: light) {
+/* Add other global styles here */
+
+/* Media queries */
+@media screen and (min-width: 1023px) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --h2-font-size: 1.5rem;
+    --normal-font-size: 1rem;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+}
+
+@media screen and (min-width: 1150px) {
+  .container {
+    margin-inline: auto;
   }
 }
