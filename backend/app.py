@@ -1,19 +1,21 @@
 # Import libraries
 import os
-from flask import Flash
+from flask import Flask
 from flask_jwt_extended import JWTManager
 
 # Import endpoints
+from endpoints.auth import auth_router
 
 # Import database, stuff
-# from models import db
+from database.models import db
 
 
 # Initialize Flask instance
 app = Flask(__name__)
 
 # Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hsa.sqlite3' # to-do, read from env file
+db_path = os.path.join(os.path.dirname(__file__), 'database', 'hsa.sqlite3')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{}'.format(db_path) # to-do, read from env file
 
 # JWT config
 app.config['JWT_SECRET_KEY'] = "someSecretKey" # to-do, read from env file
@@ -25,7 +27,7 @@ db.init_app(app)
 
 
 # Register the router
-
+app.register_blueprint(auth_router, url_prefix = '/api/auth')
 
 # Create the tables if they don't exist
 with app.app_context():
