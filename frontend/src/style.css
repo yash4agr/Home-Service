@@ -49,12 +49,12 @@ input,
 button {
   font-family: var(--body-font);
   font-size: var(--normal-font-size);
-  transition: background-color .3s ease, color .3s ease;
 }
 
 body {
   background-color: var(--body-color);
   color: var(--text-color);
+  transition: background-color .3s ease, color .3s ease;
 }
 
 input,
