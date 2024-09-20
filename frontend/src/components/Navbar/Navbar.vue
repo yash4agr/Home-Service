@@ -1,8 +1,5 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import lightIcon from '@/assets/icons/light.svg';
-import darkIcon from '@/assets/icons/dark.svg';
-
 
 const isScrolled = ref(false); 
 const currentTheme = ref('light');
@@ -48,14 +45,13 @@ function toggleTheme() {
       
       <div class="navbar-menu">
 
-        <button @click="toggleTheme" class="theme-toggle">
-          <img :src="currentTheme === 'light' ? darkIcon : lightIcon" alt="Theme toggle" class="theme-icon"/>
-        </button>
+          <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" class="icon" @click="toggleTheme"></i>
+          <!-- <img :src="currentTheme === 'light' ? darkIcon : lightIcon" alt="Theme toggle" class="theme-icon"/> -->
 
-        <a href="#" class="navbar-link"><i class="fa-regular fa-bell icon"></i></a>
-        <a href="#" class="navbar-link"><i class="fa-regular fa-cart-shopping icon"></i></a>
-        <a href="#" class="navbar-link"><i class="fa-regular fa-clipboard-list icon"></i></a>
-        <a href="#" class="navbar-link"><i class="fa-regular fa-user icon"></i></a>
+        <RouterLink to="/login" class="navbar-link"><i class="ri-notification-4-line icon"></i></RouterLink>
+          <RouterLink to="/login" class="navbar-link"><i class="ri-shopping-cart-line icon"></i></RouterLink>
+            <RouterLink to="/login" class="navbar-link"><i class="ri-survey-line icon"></i></RouterLink>
+        <RouterLink to="/login" class="navbar-link"><i class="ri-user-3-line icon"></i></RouterLink>
       </div>
 
     </div>
@@ -66,24 +62,21 @@ function toggleTheme() {
 
 .icon {
   background-color: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    font-size: 1.5rem;
-}
-
-.theme-toggle {
-  background-color: transparent;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
+  font-size: 1.5rem;
+  transition: background-color .3s ease, color .3s ease;
+  color: var(--title-color);
 }
+
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   background-color: var(--body-color);
+  transition: background-color .3s ease, color .3s ease;
   /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
   z-index: 1000;
 }
