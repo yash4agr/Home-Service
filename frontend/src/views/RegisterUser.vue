@@ -1,36 +1,60 @@
 <script setup>
 import SocialLogin from '../components/SocialLogin.vue';
 
+
+
+const handlePasswordReset = () => {
+  if (newPassword.value !== confirmPassword.value) {
+    alert('Passwords do not match');
+    return;
+  }
+  // Send new password to backend to reset
+  console.log('Password reset:', newPassword.value);
+  // Simulate backend response
+  setTimeout(() => {
+    alert('Password reset successful');
+    step.value = 1; // Reset to initial step
+  }, 1000);
+};
+
+const handleRegistration = () => {
+  
+}
+
 </script>
 
 <template>
-    <div class="login" id="login">
-      <!-- <img :src="userData.picture" alt="" width="50px" height="50px" style="z-index: 10000000;"/> -->
-      <form action="" class="login__form">
-        <h2>Log In</h2>
+    <div class="register" id="register">
+      <form action="" class="register__form">
+        <h2>Sign up</h2>
 
-        <div class="login__group">
-            <div class="login__item">
-                <label for="email" class="login__label">Email</label>
-                <input type="email" class="login__input" placeholder="Enter your email" id="email">
+        <div class="register__group">
+            <div class="register__item">
+                <label for="email" class="register__label">Email</label>
+                <input type="email" class="register__input" placeholder="Enter your email" id="email">
             </div>
 
-            <div class="login__item">
-                <label for="password" class="login__label">Password</label>
-                <input type="password" class="login__input" placeholder="Enter your password" id="password">
+            <div class="register__item">
+                <label for="password" class="register__label">Password</label>
+                <input v-model="newPassword" type="password" class="register__input" placeholder="Enter your password" id="password"> 
+            </div>
+
+            <div class="register__item">
+                <label for="confirm_password" class="register__label">Confirm Password</label>
+                <input v-model="confirmPassword" type="password" class="register__input" placeholder="Confirm password" id="confirm_password">
             </div>
         </div>
 
-        <div class="login__register">
-            <p class="login__signup">
+        <div class="register__register">
+            <p class="register__signup">
                 Don't have an account? <RouterLink to="/register">Sign up</RouterLink>
             </p>
 
-            <a href="/forgot_password" class="login__forgot">
+            <a href="/forgot_password" class="register__forgot">
                 Forgot password?
             </a>
 
-            <button class="login__button" type="submit">Log In</button>
+            <button class="register__button" type="submit">Log In</button>
             
         </div>
         <div class="separator">
@@ -39,12 +63,12 @@ import SocialLogin from '../components/SocialLogin.vue';
               <div class="line"></div>
           </div>
         <div>
-          
           <SocialLogin />
+        
         </div>
       </form>
       
-      <router-link class="ri-close-line login__close" id="login-close" to="/"></router-link>
+      <router-link class="ri-close-line register__close" id="register-close" to="/"></router-link>
 
       
     </div>
@@ -53,7 +77,7 @@ import SocialLogin from '../components/SocialLogin.vue';
 
 <style scoped>
 
-.login {
+.register {
     position: fixed;
     left: 0;
     top: 0;
@@ -69,7 +93,7 @@ import SocialLogin from '../components/SocialLogin.vue';
     transition: opacity 0.2s;
 }
 
-.login__close {
+.register__close {
     position: absolute;
     top: 2rem;
     /* right: 2rem; */
@@ -80,7 +104,7 @@ import SocialLogin from '../components/SocialLogin.vue';
     cursor: pointer;
 }
 
-.login__form{
+.register__form{
     display: grid;
     background-color: var(--container-color);
     padding: 3rem 2rem 3.5rem;
@@ -94,24 +118,24 @@ import SocialLogin from '../components/SocialLogin.vue';
     margin-inline: auto;
 }
 
-.login__title {
+.register__title {
     font-size: var(--h2-font-size);
     color: var(--title-color);
 }
 
-.login__group{
+.register__group{
     display: grid;
     row-gap: 1rem;
 }
 
-.login__label {
+.register__label {
     display: block;
     text-align: initial;
     color: var(--title-color);
     font-weight: var(--font-medium);
     margin-bottom: 0.25rem;    
 }
-.login__input {
+.register__input {
   width: 100%;
   background-color: var(--container-color);
   border: 2px solid var(--border-color);
@@ -119,24 +143,24 @@ import SocialLogin from '../components/SocialLogin.vue';
   border-radius: 0.5rem;
   color: var(--text-color);
 }
-.login__input::-moz-placeholder {
+.register__input::-moz-placeholder {
   color: var(--text-color);
 }
-.login__input::placeholder {
+.register__input::placeholder {
   color: var(--text-color);
 }
-.login__signup {
+.register__signup {
   margin-bottom: 0.5rem;
 }
-.login__signup a {
+.register__signup a {
   color: var(--first-color);
 }
-.login__forgot {
+.register__forgot {
   display: inline-block;
   color: var(--first-color);
   margin-bottom: 1.25rem;
 }
-.login__button {
+.register__button {
   display: inline-block;
   background-color: var(--first-color);
   width: 100%;
@@ -147,7 +171,7 @@ import SocialLogin from '../components/SocialLogin.vue';
   cursor: pointer;
   transition: box-shadow 0.4s;
 }
-.login__button:hover {
+.register__button:hover {
   box-shadow: 0 4px 24px hsla(230, 75%, 40%, 0.4);
 }
 
