@@ -13,6 +13,7 @@
   --font-semi-bold: 600;
   --z-fixed: 100;
   --z-modal: 1000;
+  --error-color: hsl(352, 100%, 58%);
 
   /* Light mode colors */
   --first-color: hsl(230, 75%, 56%);

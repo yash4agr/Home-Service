@@ -1,60 +1,83 @@
 <script setup>
 import SocialLogin from '../components/SocialLogin.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 
+const email = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const errorMessage = ref('');
 
-const handlePasswordReset = () => {
+const handleRegistration = async () => {
+  errorMessage.value = '';
+
   if (newPassword.value !== confirmPassword.value) {
-    alert('Passwords do not match');
+    errorMessage.value = 'Passwords do not match';
     return;
   }
-  // Send new password to backend to reset
-  console.log('Password reset:', newPassword.value);
-  // Simulate backend response
-  setTimeout(() => {
-    alert('Password reset successful');
-    step.value = 1; // Reset to initial step
-  }, 1000);
+
+  let form = document.getElementById("register__form");
+  let formData = new FormData(form);
+  formData.append("email", email.value);
+  formData.append("password", newPassword.value);
+  formData.append("confirm_password", confirmPassword.value);
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/auth/register", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
+    }
+    
+    // console.log("Registration successful:", data);
+    router.push('/');
+  } catch (error) {
+    console.error("Registration Error:", error.message);
+    errorMessage.value = error.message || 'An error occurred while registering';
+  }
 };
-
-const handleRegistration = () => {
-  
-}
-
 </script>
 
 <template>
     <div class="register" id="register">
-      <form action="" class="register__form">
+      <form @submit.prevent="handleRegistration" class="register__form" id="register__form">
         <h2>Sign up</h2>
 
         <div class="register__group">
             <div class="register__item">
                 <label for="email" class="register__label">Email</label>
-                <input type="email" class="register__input" placeholder="Enter your email" id="email">
+                <input v-model="email" type="email" class="register__input" placeholder="Enter your email" id="email" required>
             </div>
 
             <div class="register__item">
                 <label for="password" class="register__label">Password</label>
-                <input v-model="newPassword" type="password" class="register__input" placeholder="Enter your password" id="password"> 
+                <input v-model="newPassword" type="password" class="register__input" placeholder="Enter your password" id="password" minlength="8" required> 
             </div>
 
             <div class="register__item">
                 <label for="confirm_password" class="register__label">Confirm Password</label>
-                <input v-model="confirmPassword" type="password" class="register__input" placeholder="Confirm password" id="confirm_password">
+                <input v-model="confirmPassword" type="password" class="register__input" placeholder="Confirm password" id="confirm_password" minlength="8" required>
             </div>
         </div>
+
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
 
         <div class="register__register">
             <p class="register__signup">
                 Don't have an account? <RouterLink to="/register">Sign up</RouterLink>
             </p>
 
-            <a href="/forgot_password" class="register__forgot">
+            <a href="/forgot-password" class="register__forgot">
                 Forgot password?
             </a>
 
-            <button class="register__button" type="submit">Log In</button>
+            <button class="register__button" type="submit">Sign up</button>
             
         </div>
         <div class="separator">
@@ -187,4 +210,9 @@ const handleRegistration = () => {
   width: 40%;
   background-color: var(--border-color);
 }
+
+.error-message {
+  color: var(--error-color);
+}
+
 </style>

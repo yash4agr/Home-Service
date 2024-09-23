@@ -1,32 +1,68 @@
 <script setup>
 import SocialLogin from '../components/SocialLogin.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const email = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+const handleLogin = async () => {
+  errorMessage.value = '';
+
+  let form = document.getElementById("login__form");
+  let formData = new FormData(form);
+  formData.append("email", email.value);
+  formData.append("password", password.value);
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
+    }
+    
+    // console.log("Login successful:", data);
+    // router.push('/');
+  } catch (error) {
+    console.error("Login Error:", error.message);
+    errorMessage.value = error.message || 'An error occurred while login';
+  }
+};
 
 </script>
 
 <template>
     <div class="login" id="login">
-      <!-- <img :src="userData.picture" alt="" width="50px" height="50px" style="z-index: 10000000;"/> -->
-      <form action="" class="login__form">
+      <form @submit.prevent="handleLogin" class="login__form" id="login__form">
         <h2>Log In</h2>
 
         <div class="login__group">
             <div class="login__item">
                 <label for="email" class="login__label">Email</label>
-                <input type="email" class="login__input" placeholder="Enter your email" id="email">
+                <input v-model="email" type="email" class="login__input" placeholder="Enter your email" id="email" required>
             </div>
 
             <div class="login__item">
                 <label for="password" class="login__label">Password</label>
-                <input type="password" class="login__input" placeholder="Enter your password" id="password">
+                <input v-model="password" type="password" class="login__input" placeholder="Enter your password" id="password" minlength="8" required>
             </div>
         </div>
+
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
 
         <div class="login__register">
             <p class="login__signup">
                 Don't have an account? <RouterLink to="/register">Sign up</RouterLink>
             </p>
 
-            <a href="/forgot_password" class="login__forgot">
+            <a href="/forgot-password" class="login__forgot">
                 Forgot password?
             </a>
 
@@ -162,5 +198,9 @@ import SocialLogin from '../components/SocialLogin.vue';
   height: 1px;
   width: 40%;
   background-color: var(--border-color);
+}
+
+.error-message {
+  color: var(--error-color);
 }
 </style>

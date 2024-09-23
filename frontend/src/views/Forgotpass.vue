@@ -69,11 +69,11 @@ const handlePasswordReset = () => {
       <h2>Reset Password</h2>
       <div class="reset-password__group">
         <label for="newPassword" class="reset-password__label">New Password</label>
-        <input v-model="newPassword" type="password" class="reset-password__input" placeholder="Enter new password" id="newPassword" required>
+        <input v-model="newPassword" type="password" class="reset-password__input" placeholder="Enter new password" id="newPassword" minlength="8" required>
       </div>
       <div class="reset-password__group">
         <label for="confirmPassword" class="reset-password__label">Confirm Password</label>
-        <input v-model="confirmPassword" type="password" class="reset-password__input" placeholder="Confirm new password" id="confirmPassword" required>
+        <input v-model="confirmPassword" type="password" class="reset-password__input" placeholder="Confirm new password" id="confirmPassword" minlength="8" required>
       </div>
       <button class="reset-password__button" type="submit">Submit</button>
     </form>
