@@ -2,6 +2,7 @@
 import os
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 # Import endpoints
 from endpoints.auth import auth_router
@@ -25,6 +26,8 @@ jwt = JWTManager(app)
 # Initialize database
 db.init_app(app)
 
+CORS(app)
+app.config['WTF_CSRF_ENABLED'] = False
 
 # Register the router
 app.register_blueprint(auth_router, url_prefix = '/api/auth')

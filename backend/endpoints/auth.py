@@ -11,13 +11,12 @@ auth_router = Blueprint("auth", __name__)
 @auth_router.route("/register", methods=["POST"], endpoint="auth-register")
 def register():
     form = RegistrationForm()
-
     if form.validate():
         email = form.email.data
         password = form.password.data
     
         if User().validate_email(email):
-            return jsonify({ "messaage": "User with this email already exists" }), 400
+            return jsonify({ "message": "User with this email already exists" }), 400
         
         new_user = User(email=email)
         new_user.set_password(password)
@@ -32,7 +31,8 @@ def register():
             })
         except Exception as e:
             db.session.rollback()
-            return jsonify({ "message": "An error occurred", "error": str(e) }), 500
+            return jsonify({ "message": "An internal error occurred", "error": str(e) }), 500
+    return jsonify({ "message": "Validationfailed", }), 500
 
 @auth_router.route("/login", methods=["POST"], endpoint="auth-login")
 def login():
@@ -51,4 +51,6 @@ def login():
                 return jsonify({ 'message': 'Invalid credentials' }), 401
         except Exception as e:
             return jsonify({ 'message': 'An unexpected error occurred', 'error': str(e) }), 500
+        
+    return jsonify({ "message": "Validationfailed", }), 500
         
