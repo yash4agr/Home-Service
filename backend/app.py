@@ -1,6 +1,6 @@
 # Import libraries
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
@@ -8,7 +8,7 @@ from flask_cors import CORS
 from endpoints.auth import auth_router
 
 # Import database, stuff
-from database.models import db
+from database.models import db, UserLogin
 
 
 # Initialize Flask instance
@@ -28,6 +28,26 @@ db.init_app(app)
 
 CORS(app)
 app.config['WTF_CSRF_ENABLED'] = False
+
+# Additional JWT claims
+@jwt.additional_claims_loader
+def make_additional_claims(identity):
+        return jsonify({"role": UserLogin.query.filter_by(id = identity).first().role})
+
+# JWT error handlers
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_data):
+    return jsonify({"message":"Token has expired", "error":"token_expired"})
+
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({"message":"Signature verification failed", "error":"invalid_token"})
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify({"message":"Request doesn't contain valid token", "error":"authorization_failed"})
+
+
 
 # Register the router
 app.register_blueprint(auth_router, url_prefix = '/api/auth')
