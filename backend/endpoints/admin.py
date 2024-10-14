@@ -45,6 +45,30 @@ def get_users():
     })
 
 
+@admin_router.route("/ban-user", endpoint="ban-user")
+def ban_user():
+    user_id = request.json.get('user_id')
+
+    if not user_id:
+        return jsonify({"message": "User ID is required"}), 400
+
+    user = UserLogin.query.get(user_id)
+
+    if not user:
+        return jsonify({ "message": f"No User found with id: { user_id }" }), 404
+    
+    try:
+        user.is_banned = not user.is_banned
+        db.session.commit()
+        return jsonify({
+            "message": f"User ban status updated to {user.is_banned}",
+            "User": user.to_dict()
+        }), 200
+    
+    except SQLAlchemyError as e:
+        return jsonify({ "message": "An error occurred while banning the user", "error": str(e) }), 500
+
+
 @admin_router.route("/verification", endpoint="professional-verification")
 def verification():
     user_id = request.json.get('user_id')
