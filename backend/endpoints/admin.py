@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
-from database.models import db, UserLogin, Professional
+from database.models import db, UserLogin, UserAddress, Professional, Services
 
 admin_router = Blueprint("admin", __name__)
 
@@ -45,6 +45,35 @@ def get_users():
     })
 
 
+@admin_router.route("/user", endpoint="user-detail")
+def get_user():
+    user_id = request.json.get('user_id')
+
+    if not user_id:
+        return jsonify({"message": "User ID is required"}), 400
+
+    user = UserLogin.query.get(user_id)
+
+    if not user:
+        return jsonify({ "message": f"No User found with id: { user_id }" }), 404
+
+    user_address = UserAddress.query.get(user_login_id = user_id)
+    
+    if user.role=="Professional":
+        professional = Professional.query.get(user_login_id = user_id)
+        return jsonify({
+            "message": f"Professional Details",
+            "User": user.to_dict(),
+            "Address": user_address.to_dict(),
+            "professional": professional.to_dict()
+        }), 200
+    return jsonify({
+            "message": f"Professional Details",
+            "User": user.to_dict(),
+            "Address": user_address.to_dict()
+        }), 200
+    
+
 @admin_router.route("/ban-user", endpoint="ban-user")
 def ban_user():
     user_id = request.json.get('user_id')
@@ -67,6 +96,90 @@ def ban_user():
     
     except SQLAlchemyError as e:
         return jsonify({ "message": "An error occurred while banning the user", "error": str(e) }), 500
+
+
+@admin_router.route("/services", methods=['GET'], endpoint="get-services")
+def get_services():
+    services = Services.query.all()
+    return jsonify([service.to_dict() for service in services])
+
+
+@admin_router.route("/services", methods=['POST'], endpoint="Create-service")
+def create_services():
+    form = NewService()
+    if form.validate():
+        new_service = Services(
+            name=form.name.data,
+            description=form.description.data,
+            base_price=form.base_price.data,
+            img=form.img.data,
+            time_required=form.time_required.data,
+            available=form.available.data,
+        )
+        try:
+                # Add address to database
+                db.session.add(new_service)
+                db.session.commit()
+                return jsonify({"message": "Address added successfully"}), 201
+        
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            return jsonify({ "message": "An error occurred while adding the service", "error": str(e) }), 500
+    return jsonify({ "message": "Invalid form data" }), 400
+
+@admin_router.route("/services", methods=['PUT'], endpoint="Update-service")
+def update_services():
+    service_id = request.json.get('service_id')
+
+    if not service_id:
+        return jsonify({"message": "Service ID is required"}), 400
+
+    service = Services.query.get(service_id)
+
+    if not service:
+        return jsonify({ "message": f"No service found with id: { service_id }" }), 404
+
+    form = UpdateService()
+    if form.validate():
+        service.name = (form.name.data, service.name),
+        service.description = (form.description.data, service.description),
+        service.base_price = (form.base_price.data, service.base_price),
+        service.img = (form.img.data, service.img),
+        service.time_required = (form.time_required.data, service.time_required),
+        service.available = (form.available.data, service.available),
+
+        try:
+            # Commit changes to database
+            db.session.commit()
+            return jsonify({"message": "Service updated successfully"}), 200
+        
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            return jsonify({ "message": "An error occurred while updating the service", "error": str(e) }), 500
+        
+    return jsonify({ "message": "Invalid form data" }), 400
+
+@admin_router.route("/services", methods=['DELETE'], endpoint="Delete-service")
+def delete_service():
+    service_id = request.json.get('service_id')
+
+    if not service_id:
+        return jsonify({"message": "Service ID is required"}), 400
+
+    service = Services.query.get(service_id)
+
+    if not service:
+        return jsonify({ "message": f"No Service found with id: { service_id }" }), 404
+    
+    try:
+        # Delete service from database
+        db.session.delete(service)
+        db.session.commit()
+        return jsonify({"message": "Service deleted successfully"}), 200
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({ "message": "An error occurred while deleting the service", "error": str(e) }), 500
 
 
 @admin_router.route("/verification", endpoint="professional-verification")
