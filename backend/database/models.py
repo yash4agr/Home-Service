@@ -83,7 +83,7 @@ class FAQ(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationship
-    service = db.relationship("Service", back_populates="faqs")
+    service = db.relationship("Services", backref="faqs")
 
 class Professional(db.Model):
     __tablename__  = 'professionals'
@@ -98,7 +98,7 @@ class Professional(db.Model):
 
     # Relationships
     user_login = db.relationship("UserLogin", backref=db.backref("professionals", uselist=False))
-    service = db.relationship("Service", backref='professionals')
+    service = db.relationship("Services", backref='professionals')
 
 class ServiceRequest(db.Model):
     __tablename__  = 'service_requests'
@@ -107,7 +107,7 @@ class ServiceRequest(db.Model):
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('user_login.id'), nullable=False)
     professional_id = db.Column(db.Integer, db.ForeignKey('professionals.id'), nullable=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+    address_id = db.Column(db.Integer, db.ForeignKey('user_addresses.id'), nullable=False)
     date_of_request = db.Column(db.DateTime(timezone=True), nullable=False)
     date_of_completion = db.Column(db.DateTime(timezone=True), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="requested")
@@ -116,9 +116,10 @@ class ServiceRequest(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    service = db.relationship("Service", backref='service_requests')
+    service = db.relationship("Services", backref='service_requests')
     customer = db.relationship("UserLogin", foreign_keys=[customer_id], backref='service_requests')
     professional = db.relationship("Professional", backref='service_requests')
+    address = db.relationship("UserAddress", backref='service_requests')
 
 class Review(db.Model):
     __tablename__ = 'reviews'
@@ -126,10 +127,10 @@ class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     service_request_id = db.Column(db.Integer, db.ForeignKey('service_requests.id'), nullable=False)
     professional_id = db.Column(db.Integer, db.ForeignKey('professionals.id'), nullable=False)
-    rating = db.Column(db.Interger, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     service_request = db.relationship("ServiceRequest", backref='reviews')
-    professional = db.relationship("Professional", backref='service_requests')
+    professional = db.relationship("Professional", backref='reviews')

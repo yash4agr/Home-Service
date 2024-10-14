@@ -8,7 +8,7 @@ from forms import ServiceForm
 admin_router = Blueprint("admin", __name__)
 
 
-@admin_router.route("/dasboard", endpoint="admin-dashboard")
+@admin_router.route("/dashboard", endpoint="admin-dashboard")
 def dasboard():
     pass
 

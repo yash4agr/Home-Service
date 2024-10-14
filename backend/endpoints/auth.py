@@ -11,11 +11,11 @@ auth_router = Blueprint("auth", __name__)
 @auth_router.route("/register", methods=["POST"], endpoint="auth-register")
 def register():
     
-    form = RegistrationForm()
+    form = RegistrationForm(request.form)
 
     # Validate form
     if not form.validate():
-        jsonify({ "message": "Invalid form data" }), 400
+        return jsonify({ "message": "Invalid form data" }), 400
 
     email = form.email.data
     password = form.password.data
@@ -49,7 +49,7 @@ def login():
 
     # Validate form
     if not form.validate():
-        jsonify({ "message": "Invalid form data" }), 400
+        return jsonify({ "message": "Invalid form data" }), 400
 
     email = form.email.data
     password = form.password.data
