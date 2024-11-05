@@ -11,32 +11,7 @@ const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
 
-const handleLogin = async () => {
-  errorMessage.value = '';
 
-  let formData = new FormData();
-  formData.append("email", email.value);
-  formData.append("password", password.value);
-
-  try {
-    const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
-    }
-    
-    // Store the token in Vuex
-    await store.dispatch('auth/loginSuccess', data);
-    router.push('/');
-  } catch (error) {
-    console.error("Login Error:", error.message);
-    errorMessage.value = error.message || 'An error occurred while logging in';
-  }
-};
 </script>
 
 <template>
@@ -157,18 +132,18 @@ const handleLogin = async () => {
   top: 1rem;
   right: 1rem;
   font-size: 1.5rem;
-  color: var(--text-color);
+  color: var(--title-color);
   cursor: pointer;
   transition: color var(--transition-speed);
 }
 
 .auth-close:hover {
-  color: var(--primary-color);
+  color: var(--first-color);
 }
 
 .auth-title {
   font-size: var(--h2-font-size);
-  color: var(--text-color);
+  color: var(--title-color);
   text-align: center;
   margin-bottom: 1.5rem;
 }
@@ -185,7 +160,7 @@ const handleLogin = async () => {
 }
 
 .form-label {
-  color: var(--text-color);
+  color: var(--title-color);
   font-weight: var(--font-medium);
   text-align: left;
 }
@@ -193,7 +168,7 @@ const handleLogin = async () => {
 .form-input {
   width: 100%;
   background-color: var(--container-color);
-  border: 2px solid var(--accent-color);
+  border: 2px solid var(--border-color);
   padding: 1rem;
   border-radius: 0.5rem;
   color: var(--text-color);
@@ -202,8 +177,8 @@ const handleLogin = async () => {
 }
 
 .form-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px var(--accent-color);
+  border-color: var(--first-color);
+  box-shadow: 0 0 0 2px var(--first-color-light);
   outline: none;
 }
 
@@ -223,19 +198,19 @@ const handleLogin = async () => {
 }
 
 .auth-link {
-  color: var(--primary-color);
+  color: var(--first-color);
   text-decoration: none;
   transition: color var(--transition-speed);
 }
 
 .auth-link:hover {
-  color: var(--secondary-color);
+  color: var(--first-color-dark);
   text-decoration: underline;
 }
 
 .auth-button {
   width: 100%;
-  background-color: var(--accent-color);
+  background-color: var(--first-color);
   color: #fff;
   font-weight: var(--font-semi-bold);
   padding: 1rem;
@@ -247,9 +222,9 @@ const handleLogin = async () => {
 }
 
 .auth-button:hover {
-  background-color: var(--secondary-color);
+  background-color: var(--first-color-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 24px var(--secondary-color-blur);
+  box-shadow: 0 4px 24px hsla(230, 75%, 40%, 0.4);
 }
 
 .auth-button:active {
@@ -266,7 +241,7 @@ const handleLogin = async () => {
 .separator .line {
   flex: 1;
   height: 1px;
-  background-color: var(--accent-color);
+  background-color: var(--border-color);
 }
 
 .separator p {

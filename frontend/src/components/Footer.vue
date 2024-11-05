@@ -1,5 +1,5 @@
 <script setup>
-// Add any necessary imports or logic here
+
 </script>
 
 <template>
@@ -47,6 +47,8 @@
   background-color: var(--footer-bg-color, #151515);
   color: var(--footer-text-color, #fff);
   padding: 4rem 0 2rem;
+  border-top: solid 1px;
+  border-color: var(--accent-color);
 }
 
 .footer-container {
@@ -77,7 +79,7 @@
   position: absolute;
   left: 0;
   bottom: -10px;
-  background-color: var(--footer-accent-color, #e91e63);
+  background-color: var(--accent-color);
   height: 2px;
   width: 50px;
 }

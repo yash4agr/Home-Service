@@ -2,8 +2,9 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import Cart from '@/components/Cart.vue'
+import Notification from '@/components/Notification.vue'
 
 const router = useRouter()
 const store = useStore()
@@ -58,7 +59,6 @@ async function getCurrentLocation() {
         maximumAge: 0
       })
     })
-
     const { latitude, longitude } = position.coords
     const response = await axios.post('/get-location', {
       latitude,
@@ -111,7 +111,7 @@ function toggleTheme() {
           <RouterLink to="/" class="navbar-logo">
             <img src="@/assets/vue.svg" alt="Logo" class="h-8 w-auto" />
           </RouterLink>
-          <div class="location-picker">
+          <div class="location-picker" @click="getCurrentLocation">
             <i class="ri-map-pin-line" aria-hidden="true"></i>
             <span>{{ currentLocation }}</span>
           </div>
@@ -128,12 +128,12 @@ function toggleTheme() {
           </button>
 
           <!-- Notifications -->
-          <button class="nav-icon" aria-label="Notifications">
+          <RouterLink to="/notification" class="nav-icon" aria-label="Notifications">
             <i class="ri-notification-4-line" aria-hidden="true"></i>
             <span v-if="unreadNotifications" class="notification-badge" role="status">
               {{ unreadNotifications }}
             </span>
-          </button>
+          </RouterLink>
           
 
           <!-- Cart -->
@@ -191,7 +191,7 @@ function toggleTheme() {
         <RouterLink to="/" class="navbar-logo">
           <img src="@/assets/vue.svg" alt="Logo" class="h-6 w-auto" />
         </RouterLink>
-        <div class="location-picker" aria-hidden="true">
+        <div class="location-picker" @click="getCurrentLocation" aria-hidden="true">
           <i class="ri-map-pin-line"></i>
           <span>{{ currentLocation }}</span>
         </div>
@@ -208,12 +208,12 @@ function toggleTheme() {
           <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" aria-hidden="true"></i>
         </button>
 
-        <button class="nav-icon" aria-label="Notifications">
-          <i class="ri-notification-4-line" aria-hidden="true"></i>
-          <span v-if="unreadNotifications" class="notification-badge" role="status">
-            {{ unreadNotifications }}
-          </span>
-        </button>
+        <RouterLink to="/notification" class="nav-icon" aria-label="Notifications">
+            <i class="ri-notification-4-line" aria-hidden="true"></i>
+            <span v-if="unreadNotifications" class="notification-badge" role="status">
+              {{ unreadNotifications }}
+            </span>
+          </RouterLink>
 
         <div class="nav-icon-wrapper">
             <Cart
@@ -264,7 +264,7 @@ function toggleTheme() {
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: var(--body-color);
+  background-color: var(--bg-color);
   transition: all 0.3s ease;
 }
 
@@ -298,8 +298,9 @@ function toggleTheme() {
 .location-picker {
   display: flex;
   align-items: center;
+  cursor: pointer;
   gap: 0.5rem;
-  color: var(--text-color);
+  color: var(--primary-color);
   font-size: 0.875rem;
 }
 
@@ -309,7 +310,7 @@ function toggleTheme() {
   padding: 0.5rem;
   cursor: pointer;
   position: relative;
-  color: var(--title-color);
+  color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -341,7 +342,7 @@ function toggleTheme() {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: var(--body-color);
+  background-color: var(--bg-color);
   border-radius: 0.375rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   min-width: 150px;
@@ -410,7 +411,7 @@ function toggleTheme() {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--body-color);
+  background-color: var(--bg-color);
   border-top: 1px solid var(--border-color);
   z-index: 1000;
 }
