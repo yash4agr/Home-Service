@@ -112,7 +112,7 @@ const filteredServices = computed(() => {
 })
 
 const addToCart = (service) => {
-  store.dispatch('addToCart', service)
+  store.dispatch('module2/addToCart', service)
   // store.dispatch('setCartOpen', true) // Optionally open the cart when adding items
 }
 

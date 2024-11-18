@@ -2,10 +2,20 @@ import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
     {path : '', name: 'home', component: () => import('@/views/Home.vue')},
-    {path: '/login', name: 'login', component: () => import('@/views/Login.vue')},
     {path: '/register', name: 'register', component: () => import('@/views/RegisterUser.vue')},
-    {path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/Forgotpass.vue')}
-]
+    {path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/Forgotpass.vue')},
+    {
+      path: '/:pathMatch(.*)*',
+      beforeEnter: (to, from, next) => {
+        // Handle both login and signup query parameters
+        if (to.query.login === 'true' || to.query.signup === 'true') {
+          next();
+        } else {
+          next();
+        }
+      }
+    }
+  ]
 
 
 const router = createRouter({

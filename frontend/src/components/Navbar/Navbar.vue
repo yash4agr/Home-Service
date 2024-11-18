@@ -5,10 +5,13 @@ import { useStore } from 'vuex'
 import { RouterLink, useRouter } from 'vue-router'
 import Cart from '@/components/Cart.vue'
 import Notification from '@/components/Notification.vue'
+import LoginDialog from '@/components/Auth/Login.vue'
 
 const router = useRouter()
+const route = useRouter()
 const store = useStore()
-const loggedIn = ref(false)
+// const loggedIn = ref(false)
+
 const isScrolled = ref(false)
 const currentTheme = ref('light')
 const currentLocation = ref('Loading location...')
@@ -17,26 +20,44 @@ const showProfileDropdown1 = ref(false)
 const isLocationLoading = ref(true)
 const profileRef = ref(null)
 
+const isLoggedIn = computed(() => store.getters['module1/isLoggedIn'])
+const currentUser = computed(() => store.getters['module1/currentUser'])
+
+const openLogin = () => {
+  store.dispatch('module1/toggleLoginDialog', true);
+  router.push({ 
+  query: { 
+    ...route.query, 
+    login: 'true' 
+  }
+});
+};
+
+const handleLogout = () => {
+  store.dispatch('module1/logout');
+};
+
 // Cart-related computed properties
-const cartItems = computed(() => store.getters.cartItems)
+console.log(store.getters['module2/cartItems'])
+const cartItems = computed(() => store.getters['module2/cartItems'])
 const isCartOpen = computed({
-  get: () => store.getters.isCartOpen,
-  set: (value) => store.dispatch('setCartOpen', value)
+  get: () => store.getters['module2/isCartOpen'],
+  set: (value) => store.dispatch('module2/setCartOpen', value)
 })
 
 // Notifications
-const notifications = computed(() => store.getters.notifications || [])
+const notifications = computed(() => store.getters['module2/cartItems'] || [])
 const unreadNotifications = computed(() => 
   notifications.value.filter(n => !n.read).length
 )
 
 // Cart methods
 const updateQuantity = (serviceId, change) => {
-  store.dispatch('updateQuantity', { serviceId, change })
+  store.dispatch('module2/updateQuantity', { serviceId, change })
 }
 
 const removeFromCart = (serviceId) => {
-  store.dispatch('removeFromCart', serviceId)
+  store.dispatch('module2/removeFromCart', serviceId)
 }
 
 function handleScroll() {
@@ -72,12 +93,12 @@ async function getCurrentLocation() {
   }
 }
 
-function logout() {
-  store.dispatch('logout')
-  showProfileDropdown.value = false
-  // Redirect to login page
-  router.push('/login')
-}
+// function logout() {
+//   store.dispatch('logout')
+//   showProfileDropdown.value = false
+//   // Redirect to login page
+//   router.push('/login')
+// }
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
@@ -158,12 +179,12 @@ function toggleTheme() {
           </RouterLink>
 
           <!-- Profile -->
-          <div v-if="!loggedIn">
-          <RouterLink to="/login" class="nav-icon" aria-label="Bookings">
-            <i class="ri-user-3-line" aria-hidden="true"></i>
-          </RouterLink>
-          </div>
-          <div v-else class="profile-dropdown" ref="profileRef">
+          <template v-if="!isLoggedIn">
+            <button @click="openLogin" class="nav-icon" aria-label="Profile">
+              <i class="ri-user-3-line" aria-hidden="true"></i>
+            </button>
+          </template>
+          <template v-else class="profile-dropdown" ref="profileRef">
             <button 
               class="nav-icon"
               @click="showProfileDropdown1 = !showProfileDropdown1"
@@ -174,12 +195,13 @@ function toggleTheme() {
               v-if="showProfileDropdown1"
               class="dropdown-menu"
             >
-              <button @click="logout" class="dropdown-item">
+              <button @click="handleLogout" class="dropdown-item">
                 <i class="ri-logout-box-line"></i>
                 Logout
               </button>
             </div>
-          </div>
+          </template>
+          <LoginDialog />
         </div>
       </div>
     </nav>
@@ -228,31 +250,29 @@ function toggleTheme() {
           <i class="ri-calendar-line" aria-hidden="true"></i>
         </RouterLink>
 
-        <div v-if="!loggedIn">
-          <RouterLink to="/login" class="nav-icon" aria-label="Bookings">
-            <i class="ri-user-3-line" aria-hidden="true"></i>
-          </RouterLink>
-          </div>
-          <div v-else class="profile-dropdown" ref="profileRef">
+        <template v-if="!isLoggedIn">
+            <button @click="openLogin" class="nav-icon" aria-label="Profile">
+              <i class="ri-user-3-line" aria-hidden="true"></i>
+            </button>
+          </template>
+          <template v-else class="profile-dropdown" ref="profileRef">
             <button 
               class="nav-icon"
               @click="showProfileDropdown = !showProfileDropdown"
-              aria-expanded="showProfileDropdown"
-              aria-label="Profile menu"
             >
-              <i class="ri-user-3-line" aria-hidden="true"></i>
+              <i class="ri-user-3-line"></i>
             </button>
             <div 
               v-if="showProfileDropdown"
-              class="dropdown-menu dropdown-menu-mobile"
-              role="menu"
+              class="dropdown-menu"
             >
-              <button @click="logout" class="dropdown-item" role="menuitem">
-                <i class="ri-logout-box-line" aria-hidden="true"></i>
+              <button @click="handleLogout" class="dropdown-item">
+                <i class="ri-logout-box-line"></i>
                 Logout
               </button>
             </div>
-          </div>
+          </template>
+          <LoginDialog />
       </div>
     </nav>
 </template>
