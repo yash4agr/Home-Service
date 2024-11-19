@@ -24,8 +24,8 @@
       <div class="footer-col">
         <h4>For partners</h4>
         <ul>
-          <li><a href="#">Become a partner</a></li>
-          <li><a href="#">Partner login</a></li>
+          <li><a href="/?professionalSignup=true">Become a partner</a></li>
+          <li><a href="/?login=true">Partner login</a></li>
           <li><a href="#">Partner support</a></li>
         </ul>
       </div>

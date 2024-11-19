@@ -3,5 +3,9 @@ export default {
     user: null,
     token: null,
     showLoginDialog: false,
-    showSignupDialog: false,
+    signupDialogVisible: false,
+    otpDialogVisible: false,
+    resetPassDialogVisible: false, 
+    resetPasswordVerifiedEmails: {},
+    professionalSignupDialogVisible: false,
   }

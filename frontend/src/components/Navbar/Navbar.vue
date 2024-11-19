@@ -4,7 +4,9 @@ import axios from 'axios'
 import { useStore } from 'vuex'
 import { RouterLink, useRouter } from 'vue-router'
 import Cart from '@/components/Cart.vue'
+import ProfessionalSignup from '../Auth/ProfessionalSignup.vue'
 import Notification from '@/components/Notification.vue'
+import SignupDialog from '@/components/Auth/Signup.vue'
 import LoginDialog from '@/components/Auth/Login.vue'
 
 const router = useRouter()
@@ -201,7 +203,6 @@ function toggleTheme() {
               </button>
             </div>
           </template>
-          <LoginDialog />
         </div>
       </div>
     </nav>
@@ -272,9 +273,11 @@ function toggleTheme() {
               </button>
             </div>
           </template>
-          <LoginDialog />
-      </div>
-    </nav>
+        </div>
+      </nav>
+    <LoginDialog />
+    <SignupDialog />
+    <ProfessionalSignup />
 </template>
 
 <style scoped>
