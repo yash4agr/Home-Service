@@ -143,13 +143,11 @@ defineExpose({
       </div>
     </div>
 
-    <p 
-      v-if="errorMessage" 
-      class="error-message" 
-      role="alert"
-    >
-      {{ errorMessage }}
-    </p>
+    <div v-if="errorMessage" class="error-container">
+      <p class="error-message" role="alert">
+        {{ errorMessage }}
+      </p>
+    </div>
 
     <div class="auth-actions">
       <p class="auth-alternate">
@@ -171,5 +169,11 @@ defineExpose({
   background-color: var(--container-color-light);
   cursor: not-allowed;
   opacity: 0.7;
+}
+.error-container {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

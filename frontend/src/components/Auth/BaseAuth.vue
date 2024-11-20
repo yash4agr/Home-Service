@@ -103,14 +103,14 @@ onUnmounted(() => {
 
 .auth-container {
   position: fixed;
-  left: 0;
+  /* left: 0;
   top: 0;
   width: 100%;
   height: 100vh;
   z-index: 1100;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; */
 }
 
 .auth-overlay {
@@ -118,7 +118,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   background-color: var(--background-color-blur);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -140,7 +140,7 @@ onUnmounted(() => {
   animation: slideUp 0.3s ease-out;
   margin: auto;
   max-height: calc(100vh - 4rem);
-  overflow-y: auto;
+  /* overflow-y: auto; */
 }
 
 .auth-close {
@@ -164,6 +164,16 @@ onUnmounted(() => {
   color: var(--text-color);
   text-align: center;
   margin-bottom: 1.5rem;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 @keyframes slideUp {

@@ -173,9 +173,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <p v-if="errorMessage" class="error-message" role="alert">
-      {{ errorMessage }}
-    </p>
+    <div v-if="errorMessage" class="error-container">
+      <p class="error-message" role="alert">
+        {{ errorMessage }}
+      </p>
+    </div>
 
     <div class="auth-actions">
       <p class="auth-alternate">
@@ -308,5 +310,11 @@ onMounted(() => {
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   text-align: center;
+}
+.error-container {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

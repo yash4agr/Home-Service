@@ -411,9 +411,11 @@ onMounted(() => {
     </div>
 
     <!-- Error Message -->
-    <p v-if="errorMessage" class="error-message" role="alert">
-      {{ errorMessage }}
-    </p>
+    <div v-if="errorMessage" class="error-container">
+      <p class="error-message" role="alert">
+        {{ errorMessage }}
+      </p>
+    </div>
 
     <!-- Navigation Buttons -->
     <div class="auth-actions">
@@ -477,6 +479,13 @@ onMounted(() => {
   background-color: #f0f0f0;
   color: #333;
   border: 1px solid #ccc;
+}
+
+.error-container {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Responsive adjustments */

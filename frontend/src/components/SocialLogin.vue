@@ -1,13 +1,61 @@
 <script setup>
-import { decodeCredential, GoogleLogin } from 'vue3-google-login'
-const callback = (response) => {
-  // decodeCredential will retrive the JWT payload from the credential
-  const userData = decodeCredential(response.credential)
-  console.log("Handle the userData", userData)
-}
+import { ref, onMounted } from 'vue';
+import { decodeCredential, GoogleLogin } from 'vue3-google-login';
 
+const isGoogleLoaded = ref(false);
+
+const callback = (response) => {
+  const userData = decodeCredential(response.credential);
+  console.log("Handle the userData", userData);
+};
+
+onMounted(() => {
+  // Add a small delay to ensure proper initialization
+  setTimeout(() => {
+    isGoogleLoaded.value = true;
+  }, 100);
+});
 </script>
 
 <template>
-    <GoogleLogin :callback="callback" prompt auto-login/>
+  <div class="social-login-container">
+    <!-- Placeholder while Google button loads -->
+    <div v-if="!isGoogleLoaded" class="google-placeholder">
+      Loading...
+    </div>
+    
+    <div :class="['google-button-wrapper', { 'loaded': isGoogleLoaded }]">
+      <GoogleLogin 
+        :callback="callback" 
+        prompt 
+        auto-login
+      />
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.social-login-container {
+  min-height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.google-button-wrapper {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.google-button-wrapper.loaded {
+  opacity: 1;
+}
+
+.google-placeholder {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color-light);
+}
+</style>
