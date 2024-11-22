@@ -1,12 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { RouterView, RouterLink} from 'vue-router';
-import axios from 'axios';
+import axios from '@/plugins/axios';
 import Navbar from './components/Navbar/Navbar.vue';
 
 import Footer from './components/Footer.vue';
 
-axios.defaults.baseURL = 'http://localhost:5000'
 
 function handleSearch(searchTerm) {
   // Implement search logic

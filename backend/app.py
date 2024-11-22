@@ -1,6 +1,7 @@
 # Import libraries
 import os
-from flask import Flask, jsonify
+import requests
+from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from flask_cors import CORS
@@ -8,6 +9,7 @@ from flask_cors import CORS
 # Import endpoints
 from endpoints.auth import auth_router
 from endpoints.admin import admin_router
+from endpoints.professional import professional_router
 
 # Import database, stuff
 from database.models import db, UserLogin
@@ -33,10 +35,6 @@ db.init_app(app)
 CORS(app)
 app.config['WTF_CSRF_ENABLED'] = False
 
-# Additional JWT claims
-@jwt.additional_claims_loader
-def make_additional_claims(identity):
-        return jsonify({"role": UserLogin.query.filter_by(id = identity).first().role})
 
 # JWT error handlers
 @jwt.expired_token_loader
@@ -51,11 +49,34 @@ def invalid_token_callback(error):
 def missing_token_callback(error):
     return jsonify({"message":"Request doesn't contain valid token", "error":"authorization_failed"}), 401
 
+@app.route('/get-location', methods=['POST'])
+def get_location():
+    try:
+        # Get coordinates from the frontend
+        data = request.json
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        # Construct the Ola API URL
+        url = f"https://api.olamaps.io/places/v1/reverse-geocode?latlng={latitude},{longitude}&api_key=TdZk7h7BkXqq1rlcmlkGnGSYgPDqo3TlQaMWzBoR"
+
+        # Make the request to Ola API
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for HTTP codes like 4XX/5XX
+
+        # Send the result back to the frontend
+        return jsonify(response.json()), 200
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Ola API: {e}")
+        return jsonify({"error": "Failed to retrieve location data"}), 500
+
 
 
 # Register the router
 app.register_blueprint(auth_router, url_prefix = '/api/auth')
 app.register_blueprint(admin_router, url_prefix = '/api/admin')
+app.register_blueprint(professional_router, url_prefix="/api/professionals")
 
 # Create the tables if they don't exist
 with app.app_context():

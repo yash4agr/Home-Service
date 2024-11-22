@@ -19,7 +19,7 @@ const otpDigits = ref(["", "", "", "", "", ""]);
 const errorMessage = ref("");
 const successMessage = ref("");
 const isResending = ref(false);
-const timer = ref(30);
+const timer = ref(0);
 const timerInterval = ref(null);
 const isLoading = ref(false);
 const previousRoute = ref(null);
@@ -29,8 +29,8 @@ const isOpen = computed(() => store.getters["module1/otpDialogVisible"]);
 const canResend = computed(() => timer.value === 0);
 
 const verificationType = computed(() => {
-  if (route.query["verify-email"]) return "email-verification";
-  if (route.query["reset-password"]) return "password-reset";
+  if (route.query["verify-email"] === "true") return "email-verification";
+  if (route.query["reset-password"] === "true") return "password-reset";
   return "signup";
 });
 
@@ -40,6 +40,7 @@ const verificationEmail = computed(() => {
 
 // Methods
 const startResendTimer = () => {
+  clearInterval(timerInterval.value); // Clear existing timer
   timer.value = 30;
   timerInterval.value = setInterval(() => {
     if (timer.value > 0) {
@@ -60,58 +61,60 @@ const handleInput = (index, event) => {
 
   otpDigits.value[index] = value.slice(-1);
 
-  if (value && index < 5) {
-    event.target.nextElementSibling?.focus();
+  // Only focus next input if there's a value and it's a digit
+  if (value && /^\d$/.test(value) && index < 5) {
+    const nextInput = event.target.nextElementSibling;
+    if (nextInput) nextInput.focus();
   }
 
-  if (otpDigits.value.every((digit) => digit !== "")) {
+  // Only verify if all digits are filled and are numbers
+  if (otpDigits.value.every((digit) => /^\d$/.test(digit))) {
     handleVerify();
   }
 };
 
 const handleKeydown = (index, event) => {
-  if (event.key === "Backspace" && !otpDigits.value[index]) {
-    otpDigits.value[index - 1] = "";
-    event.target.previousElementSibling?.focus();
+  if (event.key === "Backspace") {
+    if (!otpDigits.value[index] && index > 0) {
+      otpDigits.value[index - 1] = "";
+      const prevInput = event.target.previousElementSibling;
+      if (prevInput) prevInput.focus();
+    } else {
+      otpDigits.value[index] = "";
+    }
+    event.preventDefault();
   }
 };
 
 const handleVerificationSuccess = async (response) => {
   successMessage.value = "Verification successful!";
-  switch (verificationType.value) {
-    case "signup":
-      await store.dispatch("module1/completeSignup", response.data);
-      router.push("/");
-      break;
-    case "password-reset":
-      // Update URL to indicate reset password verification
+  errorMessage.value = ""; // Clear any previous errors
+  
+  try {
+    if (verificationType.value === "password-reset") {
       await store.dispatch('module1/setResetPasswordVerified', {
-        email: verificationEmail.value,
-        verified: true
-      });
-      
-      // Update URL with reset password parameters
-      router.push({
-        query: {
-          ...route.query,
-          newPassword: "true",
           email: verificationEmail.value,
-          verified: "true"
-        }
-      });
+          verified: true
+        });
+        
+        await router.push({
+          query: {
+            ...route.query,
+            newPassword: "true",
+            email: verificationEmail.value,
+            verified: "true"
+          }
+        });
 
-      // Open reset password dialog
-      resetPasswordComponent.value.openPasswordResetDialog(verificationEmail.value);
-      closeDialog();
-      break;
-    case "email-verification":
-      await store.dispatch("module1/updateEmailVerification", true);
-      if (route.query.fromBooking) {
-        router.push(route.query.redirectTo || "/service-booking");
-      } else {
-        router.push("/");
-      }
-      break;
+        resetPasswordComponent.value?.openPasswordResetDialog(verificationEmail.value);
+        closeDialog();
+    } else {
+        await store.dispatch("module1/updateEmailVerification", true);
+        await router.push(route.query.fromBooking ? (route.query.redirectTo || "/service-booking") : "/");
+    }
+  } catch (error) {
+    console.error("Post-verification Error:", error);
+    errorMessage.value = "Error processing verification. Please try again.";
   }
 };
 
@@ -119,49 +122,56 @@ const handleVerify = async () => {
   if (isLoading.value) return;
 
   const otp = otpDigits.value.join("");
+  if (!/^\d{6}$/.test(otp)) {
+    errorMessage.value = "Please enter a valid 6-digit code";
+    return;
+  }
+
   errorMessage.value = "";
   successMessage.value = "";
   isLoading.value = true;
 
   try {
-    // const response = await axios.post("/api/auth/verify-otp", {
-    //   email: verificationEmail.value,
-    //   otp,
-    //   type: verificationType.value,
-    // });
-    const response = ref();
+    const response = await store.dispatch("module1/verifyOTP", {
+      email: verificationEmail.value,
+      otp,
+      type: verificationType.value,
+    });
     
-    await handleVerificationSuccess(response);
+    await handleVerificationSuccess({ data: response });
   } catch (error) {
     console.error("Verification Error:", error);
-    errorMessage.value =
-      error.response?.data?.message || "Invalid verification code";
+    errorMessage.value = error?.response?.data?.message || "Invalid verification code";
     otpDigits.value = ["", "", "", "", "", ""];
-    document.querySelector(".otp-input")?.focus();
+    const firstInput = document.querySelector(".otp-input");
+    if (firstInput) firstInput.focus();
   } finally {
     isLoading.value = false;
   }
 };
 
-const handleSubmit = () => {
+const handleSubmit = (e) => {
+  e?.preventDefault?.();
   handleVerify();
 };
 
 const resendOTP = async () => {
   if (!canResend.value || isResending.value) return;
-
+  console.log("1")
   isResending.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
 
   try {
-    await axios.post("/api/auth/resend-otp", {
+    await store.dispatch('module1/resendOTP', {
       email: verificationEmail.value,
-      type: verificationType.value,
+      type: verificationType.value
     });
-
+    
     successMessage.value = "New verification code sent!";
     startResendTimer();
   } catch (error) {
+    console.error("Resend Error:", error);
     errorMessage.value = "Failed to resend code. Please try again.";
   } finally {
     isResending.value = false;
@@ -169,9 +179,8 @@ const resendOTP = async () => {
 };
 
 const closeDialog = () => {
+  clearInterval(timerInterval.value);
   const query = { ...route.query };
-  
-  // Remove verification-related query parameters
   delete query["verify-email"];
   delete query["reset-password"];
   delete query["email"];
@@ -180,9 +189,16 @@ const closeDialog = () => {
     path: route.path,
     query,
     hash: route.hash,
-  });
+  }).catch(console.error);
 
   store.dispatch("module1/toggleOtpDialog", false);
+  
+  // Reset state
+  otpDigits.value = ["", "", "", "", "", ""];
+  errorMessage.value = "";
+  successMessage.value = "";
+  isLoading.value = false;
+  timer.value = 30;
 };
 
 // Watchers
@@ -192,13 +208,17 @@ watch(
     route.query["reset-password"],
     route.query.email,
   ],
-  ([newVerifyEmail, newResetPassword, newEmail]) => {
+  async ([newVerifyEmail, newResetPassword, newEmail]) => {
     if (
       (newVerifyEmail === "true" || newResetPassword === "true") &&
       newEmail &&
       !isOpen.value
     ) {
-      store.dispatch("module1/toggleOtpDialog", true);
+      await store.dispatch("module1/toggleOtpDialog", true);
+
+      if (newEmail) {
+        await resendOTP();
+      }
     } else if (!newVerifyEmail && !newResetPassword && isOpen.value) {
       store.dispatch("module1/toggleOtpDialog", false);
     }
@@ -207,9 +227,8 @@ watch(
 );
 
 // Lifecycle Hooks
-onMounted(() => {
+onMounted(async () => {
   const currentRoute = router.currentRoute.value;
-  // Only store if not already on verification modal
   if (
     !currentRoute.query["verify-email"] &&
     !currentRoute.query["reset-password"]
@@ -220,9 +239,14 @@ onMounted(() => {
       query: { ...currentRoute.query },
       hash: currentRoute.hash,
     };
+  } else if (
+    (currentRoute.query["verify-email"] === "true" || 
+     currentRoute.query["reset-password"] === "true") && 
+    currentRoute.query.email
+  ) {
+    // Initialize verification on mount if we have the required query params
+    // await initializeVerification();
   }
-
-  startResendTimer();
 });
 
 onUnmounted(() => {
@@ -253,6 +277,8 @@ onUnmounted(() => {
         v-model="otpDigits[index]" 
         type="text" 
         class="otp-input"
+        inputmode="numeric"
+        pattern="\d*"
         maxlength="1" 
         :autofocus="index === 0" 
         @input="handleInput(index, $event)"
@@ -325,6 +351,14 @@ onUnmounted(() => {
   background-color: var(--container-color);
   color: var(--text-color);
   transition: all var(--transition-speed);
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.otp-input::-webkit-outer-spin-button,
+.otp-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .otp-input:focus {
@@ -345,6 +379,7 @@ onUnmounted(() => {
   cursor: pointer;
   font-weight: var(--font-medium);
   transition: color var(--transition-speed);
+  padding: 0.5rem 1rem;
 }
 
 .resend-button:disabled {
@@ -371,6 +406,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.error-message {
+  color: var(--error-color);
+  text-align: center;
 }
 
 @media (max-width: 468px) {

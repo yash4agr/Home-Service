@@ -140,7 +140,7 @@ onUnmounted(() => {
   animation: slideUp 0.3s ease-out;
   margin: auto;
   max-height: calc(100vh - 4rem);
-  /* overflow-y: auto; */
+  overflow-y: auto;
 }
 
 .auth-close {

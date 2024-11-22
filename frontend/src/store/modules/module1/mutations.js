@@ -1,3 +1,25 @@
+// User related mutations
+const SET_USER = (state, user) => {
+  state.user = user;
+  state.userRole = user.role;
+  state.isVerified = user.is_email_verified
+  state.isAuthenticated = !!user;
+}
+
+const SET_TOKENS = (state, {accessToken, refreshToken}) => {
+  state.accessToken = accessToken;
+  state.refreshToken = refreshToken;
+  state.isAuthenticated = !!accessToken;
+}
+
+const CLEAR_AUTH = (state) => {
+  state.user = null;
+  state.isAuthenticated = false;
+  state.accessToken = null;
+  state.refreshToken = null;
+}
+
+// Dialog visibility mutations
 const SET_LOGIN_DIALOG = (state, value) => {
     state.showLoginDialog = value;
   }
@@ -13,30 +35,32 @@ const SET_RESETPASS_DIALOG = (state, value) => {
 const SET_PROFESSIONAL_SIGNUP_DIALOG = (state, value) => {
   state.professionalSignupDialogVisible = value;
 }
-const SET_RESET_PASSWORD_VERIFIED = (state, { email, verified }) => {
-  state.resetPasswordVerifiedEmails = {
-    ...state.resetPasswordVerifiedEmails,
-    [email]: verified
-  };
+
+// Verification and reset mutations
+const UPDATE_EMAIL_VERIFICATION = (state, value) => {
+  state.isEmailVerified = value;
+  state.emailVerificationStatus = value;
 }
-const SET_AUTH = (state, { user, token }) => {
-    state.isLoggedIn = true;
-    state.user = user;
-    state.token = token;
-  }
-const CLEAR_AUTH = (state) => {
-    state.isLoggedIn = false;
-    state.user = null;
-    state.token = null;
-  }
+const SET_RESET_PASSWORD_VERIFIED = (state, { email, verified }) => {
+    state.resetPasswordVerified = verified;
+    state.resetPasswordEmail = email;
+}
+
 
 export default {
-    SET_LOGIN_DIALOG,
-    SET_SIGNUP_DIALOG,
-    SET_OTP_DIALOG,
-    SET_RESET_PASSWORD_VERIFIED,
-    SET_RESETPASS_DIALOG,
-    SET_PROFESSIONAL_SIGNUP_DIALOG,
-    SET_AUTH,
-    CLEAR_AUTH,
+  // User
+  SET_USER,
+  SET_TOKENS,
+  CLEAR_AUTH,
+
+  // Dialogs
+  SET_LOGIN_DIALOG,
+  SET_SIGNUP_DIALOG,
+  SET_OTP_DIALOG,
+  SET_RESETPASS_DIALOG,
+  SET_PROFESSIONAL_SIGNUP_DIALOG,
+
+  // Verification & Password reset
+  UPDATE_EMAIL_VERIFICATION,
+  SET_RESET_PASSWORD_VERIFIED,
 }

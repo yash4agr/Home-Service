@@ -1,6 +1,6 @@
 <script setup>
 import BaseAuth from "@/components/Auth/BaseAuth.vue";
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
 import axios from "axios";
@@ -14,16 +14,17 @@ const store = useStore();
 const email = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
-const errorMessage = ref('');
 const isPasswordResetVisible = ref(false);
+const errorMessage = ref("");
+const isSubmitting = ref(false);
 
-// Computed
-const isResetPasswordVerified = computed(() => 
-  store.getters['module1/isResetPasswordVerified'](email.value)
-);
+const isOpen = computed(() => store.getters["module1/resetPassDialogVisible"]);
 
 // Methods
 const handleResetPassword = async () => {
+  if (isSubmitting.value) return;
+  errorMessage.value = "";
+
   // Reset password validation
   if (!email.value) {
     errorMessage.value = 'Email is required';
@@ -41,14 +42,11 @@ const handleResetPassword = async () => {
   }
 
   try {
-    const formData = new FormData();
-    formData.append('email', email.value);
-    formData.append('newPassword', newPassword.value);
-
-    const response = await axios.post('/api/auth/reset-password', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    isSubmitting.value = true;
+    await store.dispatch("module1/resetPassword", {
+      email: email.value,
+      password: newPassword.value,
+      confirmPassword: confirmPassword.value
     });
 
     // Reset password success handling
@@ -57,21 +55,19 @@ const handleResetPassword = async () => {
       verified: false
     });
 
-    // Show success message or toast
-    store.dispatch('module1/showNotification', {
-      message: 'Password reset successfully',
-      type: 'success'
-    });
-
-    // Close password reset dialog
     closePasswordResetDialog();
-
-    // Redirect to login
-    router.push({ name: 'login' });
+    router.push('?login=true');
+    errorMessage.value = "Password reset successfully"
   } catch (error) {
     console.error('Reset Password Error:', error);
     errorMessage.value = error.response?.data?.message || 'An error occurred while resetting password';
+  } finally {
+    isSubmitting.value = false;
   }
+};
+
+const handleSubmit = () => {
+  handleResetPassword();
 };
 
 const openPasswordResetDialog = (userEmail) => {
@@ -157,9 +153,13 @@ defineExpose({
         </router-link>
       </p>
 
-      <button class="auth-button" type="submit">
-        Reset Password
-      </button>
+      <button 
+      class="auth-button" 
+      type="submit" 
+      :disabled="isSubmitting"
+    >
+      {{ isSubmitting ? 'Reseting Password...' : 'Reset Password' }}
+    </button>
     </div>
   </BaseAuth>
 </template>

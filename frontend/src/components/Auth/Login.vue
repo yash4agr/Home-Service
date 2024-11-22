@@ -5,7 +5,6 @@ import EmailVerification from "@/components/Auth/EmailVerification.vue";
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
-import axios from "axios";
 
 // Composables
 const router = useRouter();
@@ -17,36 +16,32 @@ const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const previousRoute = ref(null);
+const isSubmitting = ref(false);
 
 // Computed
 const isOpen = computed(() => store.getters["module1/loginDialogVisible"]);
 
 // Methods
 const handleLogin = async () => {
+  if (isSubmitting.value) return;
   errorMessage.value = "";
-  const formData = new FormData();
-  formData.append("email", email.value);
-  formData.append("password", password.value);
-
   try {
-    const response = await axios.post("/api/auth/login", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    isSubmitting.value = true;
+    await store.dispatch("module1/login", {
+      email: email.value,
+      password: password.value
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
-    }
-
-    await store.dispatch("module1/loginSuccess", data);
     closeDialog();
+    
     // Navigate to the previous route or home
     router.push(previousRoute.value?.fullPath || "/");
+    
   } catch (error) {
-    console.error("Login Error:", error.message);
-    errorMessage.value = error.message || "An error occurred while logging in";
+    console.error("Login Error:", error.response?.data?.message || error.message);
+    errorMessage.value = error.response?.data?.message || "An error occurred while logging in";
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -187,7 +182,13 @@ onMounted(() => {
 
       <a @click="handlePasswordReset" class="auth-link"> Forgot password? </a>
 
-      <button class="auth-button" type="submit">Log In</button>
+      <button 
+    class="auth-button" 
+    type="submit" 
+    :disabled="isSubmitting"
+  >
+    {{ isSubmitting ? 'Logging in...' : 'Log In' }}
+  </button>
     </div>
 
     <div class="separator">

@@ -6,6 +6,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import Cart from '@/components/Cart.vue'
 import ProfessionalSignup from '../Auth/ProfessionalSignup.vue'
 import Notification from '@/components/Notification.vue'
+import Bookings from '@/components/Bookings/Bookings.vue'
 import SignupDialog from '@/components/Auth/Signup.vue'
 import LoginDialog from '@/components/Auth/Login.vue'
 
@@ -22,7 +23,7 @@ const showProfileDropdown1 = ref(false)
 const isLocationLoading = ref(true)
 const profileRef = ref(null)
 
-const isLoggedIn = computed(() => store.getters['module1/isLoggedIn'])
+const isLoggedIn = computed(() => store.getters['module1/isAuthenticated'])
 const currentUser = computed(() => store.getters['module1/currentUser'])
 
 const openLogin = () => {
@@ -40,8 +41,6 @@ const handleLogout = () => {
 };
 
 // Cart-related computed properties
-console.log(store.getters['module2/cartItems'])
-const cartItems = computed(() => store.getters['module2/cartItems'])
 const isCartOpen = computed({
   get: () => store.getters['module2/isCartOpen'],
   set: (value) => store.dispatch('module2/setCartOpen', value)
@@ -52,15 +51,6 @@ const notifications = computed(() => store.getters['module2/cartItems'] || [])
 const unreadNotifications = computed(() => 
   notifications.value.filter(n => !n.read).length
 )
-
-// Cart methods
-const updateQuantity = (serviceId, change) => {
-  store.dispatch('module2/updateQuantity', { serviceId, change })
-}
-
-const removeFromCart = (serviceId) => {
-  store.dispatch('module2/removeFromCart', serviceId)
-}
 
 function handleScroll() {
   isScrolled.value = window.scrollY > 0
@@ -95,12 +85,12 @@ async function getCurrentLocation() {
   }
 }
 
-// function logout() {
-//   store.dispatch('logout')
-//   showProfileDropdown.value = false
-//   // Redirect to login page
-//   router.push('/login')
-// }
+function logout() {
+  store.dispatch('logout')
+  showProfileDropdown.value = false
+  // Redirect to login page
+  router.push('/')
+}
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
@@ -151,7 +141,7 @@ function toggleTheme() {
           </button>
 
           <!-- Notifications -->
-          <RouterLink to="/notification" class="nav-icon" aria-label="Notifications">
+          <RouterLink to="/" class="nav-icon" aria-label="Notifications">
             <i class="ri-notification-4-line" aria-hidden="true"></i>
             <span v-if="unreadNotifications" class="notification-badge" role="status">
               {{ unreadNotifications }}
@@ -161,22 +151,11 @@ function toggleTheme() {
 
           <!-- Cart -->
           <div class="nav-icon-wrapper">
-            <!-- <button class="nav-icon" @click="isCartOpen = !isCartOpen">
-              <i class="ri-shopping-cart-line"></i>
-              <span v-if="cartItems.length" class="cart-badge">
-                {{ cartItems.length }}
-              </span>
-            </button> -->
-            <Cart
-              v-model:isCartOpen="isCartOpen"
-              :cartItems="cartItems"
-              @updateQuantity="updateQuantity"
-              @removeFromCart="removeFromCart"
-            />
+            <Cart v-model:isCartOpen="isCartOpen" />
           </div>
 
           <!-- Bookings -->
-          <RouterLink to="/bookings" class="nav-icon" aria-label="Bookings">
+          <RouterLink to="/" class="nav-icon" aria-label="Bookings">
             <i class="ri-calendar-line" aria-hidden="true"></i>
           </RouterLink>
 
@@ -231,23 +210,18 @@ function toggleTheme() {
           <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" aria-hidden="true"></i>
         </button>
 
-        <RouterLink to="/notification" class="nav-icon" aria-label="Notifications">
+        <RouterLink to="/" class="nav-icon" aria-label="Notifications">
             <i class="ri-notification-4-line" aria-hidden="true"></i>
             <span v-if="unreadNotifications" class="notification-badge" role="status">
               {{ unreadNotifications }}
             </span>
           </RouterLink>
 
-        <div class="nav-icon-wrapper">
-            <Cart
-              v-model:isCartOpen="isCartOpen"
-              :cartItems="cartItems"
-              @updateQuantity="updateQuantity"
-              @removeFromCart="removeFromCart"
-            />
+          <div class="nav-icon-wrapper">
+            <Cart v-model:isCartOpen="isCartOpen" />
           </div>
 
-        <RouterLink to="/bookings" class="nav-icon" aria-label="Bookings">
+        <RouterLink to="/" class="nav-icon" aria-label="Bookings">
           <i class="ri-calendar-line" aria-hidden="true"></i>
         </RouterLink>
 
@@ -278,6 +252,10 @@ function toggleTheme() {
     <LoginDialog />
     <SignupDialog />
     <ProfessionalSignup />
+    <!-- <Bookings /> -->
+    <Bookings
+    v-model:isBookingsOpen="h"
+/>
 </template>
 
 <style scoped>

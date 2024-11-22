@@ -1,7 +1,9 @@
-const isLoggedIn = state => state.isLoggedIn
-const isAuthenticated = state => true
-const isEmailVerified = state => true
+// User related getters
+const isAuthenticated = state => state.isAuthenticated
 const currentUser = state => state.user
+const userRole = state => state.userRole || 'user'
+const isEmailVerified = state => state.isVerified || false
+
 const loginDialogVisible = state => state.showLoginDialog
 const signupDialogVisible = state => state.signupDialogVisible
 const otpDialogVisible = state => state.otpDialogVisible
@@ -10,15 +12,28 @@ const professionalSignupDialogVisible = state => state.professionalSignupDialogV
 const isResetPasswordVerified = (state) => (email) => {
     return state.resetPasswordVerifiedEmails[email] === true;
   };
+
+// Verification getters
+const getOtpResendTimeout = state => state.otpResendTimeout
+const emailVerificationStatus = state => state.emailVerificationStatus
+const resetPasswordVerified = state => state.resetPasswordVerified
+const resetPasswordEmail = state => state.resetPasswordEmail
+
 export default {
-    isLoggedIn,
-    isAuthenticated,
-    isEmailVerified,
-    currentUser,
-    loginDialogVisible,
-    signupDialogVisible,
-    otpDialogVisible,
-    resetPassDialogVisible,
-    isResetPasswordVerified,
-    professionalSignupDialogVisible,
+  isAuthenticated,
+  currentUser,
+  userRole,
+  isEmailVerified,
+    
+  loginDialogVisible,
+  signupDialogVisible,
+  otpDialogVisible,
+  resetPassDialogVisible,
+  isResetPasswordVerified,
+  professionalSignupDialogVisible,
+
+  getOtpResendTimeout,
+  emailVerificationStatus,
+  resetPasswordVerified,
+  resetPasswordEmail,
     }

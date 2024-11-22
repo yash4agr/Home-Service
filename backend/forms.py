@@ -5,13 +5,19 @@ from wtforms.validators import DataRequired, Email, Length, ValidationError, Opt
 from datetime import datetime
 
 class RegistrationForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=1, max=50)])
     email = StringField('Email', validators=[Email(), DataRequired()])
     password = PasswordField('Password', validators=[Length(min=8), DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
+    confirmPassword = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
         
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[Email(), DataRequired()])
     password = PasswordField('Password', validators=[Length(min=8), DataRequired()])
+    
+class ResetPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[Email(), DataRequired()])
+    password = PasswordField('Password', validators=[Length(min=8), DataRequired()])
+    confirmPassword = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
 
 class UpdateProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=25)])

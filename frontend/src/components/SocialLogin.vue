@@ -1,16 +1,25 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { decodeCredential, GoogleLogin } from 'vue3-google-login';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 
 const isGoogleLoaded = ref(false);
+const store = useStore();
+const router = useRouter();
 
-const callback = (response) => {
-  const userData = decodeCredential(response.credential);
-  console.log("Handle the userData", userData);
+const callback = async (response) => {
+  try {
+    const userData = decodeCredential(response.credential);
+    await store.dispatch('module1/googleLogin', userData);
+    router.push('/');
+
+  } catch (error) {
+    console.error('Google Login Error:', error);
+  }
 };
 
 onMounted(() => {
-  // Add a small delay to ensure proper initialization
   setTimeout(() => {
     isGoogleLoaded.value = true;
   }, 100);
@@ -19,7 +28,6 @@ onMounted(() => {
 
 <template>
   <div class="social-login-container">
-    <!-- Placeholder while Google button loads -->
     <div v-if="!isGoogleLoaded" class="google-placeholder">
       Loading...
     </div>

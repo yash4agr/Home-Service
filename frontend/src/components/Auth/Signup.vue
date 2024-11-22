@@ -5,7 +5,6 @@ import EmailVerification from "@/components/Auth/EmailVerification.vue";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
-import axios from "axios";
 
 // Composables
 const router = useRouter();
@@ -19,12 +18,14 @@ const password = ref("");
 const confirmPassword = ref("");
 const errorMessage = ref("");
 const previousRoute = ref(null);
+const isSubmitting = ref(false);
 
 // Computed
 const isOpen = computed(() => store.getters["module1/signupDialogVisible"]);
 
 // Methods
 const handleSignup = async () => {
+  if (isSubmitting.value) return;
   errorMessage.value = "";
 
   if (password.value !== confirmPassword.value) {
@@ -32,24 +33,16 @@ const handleSignup = async () => {
     return;
   }
 
-  const formData = new FormData();
-  formData.append("name", name.value);
-  formData.append("email", email.value);
-  formData.append("password", password.value);
-
   try {
-    const response = await axios.post("/api/auth/signup", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    isSubmitting.value = true;
+    await store.dispatch("module1/signup", {
+      name: name.value,
+      email: email.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || "Signup failed");
-    }
-
-    await store.dispatch("module1/loginSuccess", data);
+    // Successful signup
     closeDialog();
     router.push({
       query: {
@@ -58,8 +51,10 @@ const handleSignup = async () => {
       },
     });
   } catch (error) {
-    console.error("Signup Error:", error.message);
-    errorMessage.value = error.message || "An error occurred during signup";
+    console.error("Signup Error:", error.response?.data?.message || error.message);
+    errorMessage.value = error.response?.data?.message || "An error occurred during signup";
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -195,7 +190,13 @@ onMounted(() => {
         <a @click="handleLogin" class="auth-link"> Log In </a>
       </p>
 
-      <button class="auth-button" type="submit">Create Account</button>
+      <button 
+    class="auth-button" 
+    type="submit" 
+    :disabled="isSubmitting"
+  >
+    {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+  </button>
     </div>
 
     <div class="separator">

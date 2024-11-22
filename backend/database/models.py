@@ -16,7 +16,6 @@ class UserLogin(db.Model):
     role = db.Column(db.String(10), nullable=False, default="user")
 
     phone_number = db.Column(db.String(20), nullable=True, unique=True)
-    is_phone_verified = db.Column(db.Boolean, default=False)
     is_email_verified = db.Column(db.Boolean, default=False)
 
     is_banned = db.Column(db.Boolean, default=False)
@@ -45,7 +44,7 @@ class UserAddress(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_login_id = db.Column(db.Integer, db.ForeignKey('user_login.id'), nullable=False)
-    address_type = db.Column(db.String(20), nullable=False, default="home")
+    address_type = db.Column(db.String(20), nullable=False, default="user")
     street = db.Column(db.String(100), nullable=False)
     city = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(100), nullable=False)
