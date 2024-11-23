@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-# from sqlalchemy.orm import relationship
-# from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -56,6 +56,21 @@ class UserAddress(db.Model):
     # Relationship
     user_login = db.relationship("UserLogin", back_populates="user_addresses")
 
+class Category(db.Model):
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    services = db.relationship('Services', backref='category', lazy=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+
 class Services(db.Model):
     __tablename__ = 'services'
 
@@ -63,14 +78,28 @@ class Services(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     base_price = db.Column(db.Float, nullable=False)
-    img = db.Column(db.String(255), nullable=False,  default='PATH/TO_IMG.jpg')
-    time_required = db.Column(db.Integer, nullable=False)
-
-    available = db.Column(db.String(100), nullable=False) # Column type will change
-
+    img = db.Column(db.String(255), nullable=False, default='img/default_pfp.jpg')
+    time_required = db.Column(db.Float, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    tags = db.Column(db.JSON)
+    
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), 
+                          onupdate=lambda: datetime.now(timezone.utc))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'base_price': self.base_price,
+            'img': 'http://localhost:5000/'+self.img,
+            'time_required': self.time_required,
+            'category_id': self.category_id,
+            'tags': self.tags or [],
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
 class FAQ(db.Model):
     __tablename__ = 'faqs'
 

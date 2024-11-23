@@ -3,25 +3,37 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { Chart } from 'chart.js/auto'
 
+import ServiceDialog from '@/components/Service/service.vue'
+import ServiceManagementDialog from '@/components/Service/ServiceManagementDialog.vue'
+import UserManagementDialog from '@/components/User/UserDialog.vue'
+
 // Store
 const store = useStore()
 
-// Refs for charts and stats
-const serviceChart = ref(null)
-const revenueChart = ref(null)
-const stats = ref({
-  totalRequests: 0,
-  activeServices: 0,
-  completionRate: 0
-})
 
-// Computed Properties
-const isAdmin = computed(() => true) // Replace with actual admin check from store
-const userData = computed(() => store.getters['module1/currentUser'])
-
-// Chart References
+// Refs for charts
 const serviceChartRef = ref(null)
 const revenueChartRef = ref(null)
+const serviceChart = ref(null)
+const revenueChart = ref(null)
+
+// Dialog state management
+const isServiceDialogOpen = ref(false)
+const isManageDialogOpen = ref(false)
+const selectedService = ref(null)
+
+// Computed properties from store
+const isAdmin = computed(() => store.getters['admin/isAdmin'])
+const stats = computed(() => store.getters['admin/dashboardStats'])
+const serviceDialogState = computed(() => store.getters['admin/serviceDialogState'])
+const serviceManagementDialogState = computed(() => store.getters['admin/serviceManagementDialogState'])
+const userManagementDialogState = computed(() => store.getters['admin/userManagementDialogState'])
+
+
+// Computed Properties
+// const isAdmin = computed(() => true) // Replace with actual admin check from store
+const userData = computed(() => store.getters['module1/currentUser'])
+
 
 // Method to fetch dashboard data
 const fetchDashboardData = async () => {
@@ -31,7 +43,7 @@ const fetchDashboardData = async () => {
     updateCharts(response.chartData)
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
-    // Optional: Add error handling toast or notification
+
   }
 }
 
@@ -48,7 +60,7 @@ const initializeCharts = () => {
       datasets: [{
         label: 'Service Requests',
         data: [12, 19, 3, 5, 2, 3],
-        borderColor: 'var(--primary-color)',
+        borderColor: '#dfbc90',
         tension: 0.4
       }]
     },
@@ -73,7 +85,7 @@ const initializeCharts = () => {
       datasets: [{
         label: isAdmin.value ? 'Revenue' : 'Ratings',
         data: [65, 59, 80, 81, 56, 55],
-        backgroundColor: 'var(--accent-color)'
+        backgroundColor: '#dfbc90'
       }]
     },
     options: {
@@ -104,32 +116,56 @@ const updateCharts = (data) => {
 
 // Quick Action Handlers
 const handleCreateService = () => {
-  // Implement service creation logic
-  store.dispatch('service/openCreateModal')
+  store.dispatch('admin/openServiceDialog')
+}
+
+const closeServiceDialog = () => {
+  isServiceDialogOpen.value = false
+  selectedService.value = null
+}
+
+
+const handleManageService = () => {
+  store.dispatch('admin/toggleServiceManagementDialog', true)
+}
+
+const handleServiceEdit = (service) => {
+  store.dispatch('admin/toggleServiceManagementDialog', false)
+  store.dispatch('admin/openServiceDialog', service)
 }
 
 const handleManageUsers = () => {
+  isManageDialogOpen.value = true
   // Navigate to user management page or open management modal
-  store.dispatch('users/openManagementView')
+  // store.dispatch('users/openManagementView')
 }
 
 const handleExportReport = () => {
   // Trigger report export
-  store.dispatch('reports/exportMonthlyReport')
+  // store.dispatch('reports/exportMonthlyReport')
 }
 
 const handleVerifyProfessionals = () => {
   // Open professional verification view
-  store.dispatch('professionals/openVerificationView')
+  // store.dispatch('professionals/openVerificationView')
 }
 
 // Lifecycle Hook
-onMounted(() => {
+onMounted(async () => {
   initializeCharts()
-  fetchDashboardData()
+  
+  try {
+    const dashboardData = await store.dispatch('admin/fetchDashboardData')
+    updateCharts(dashboardData.chartData)
+  } catch (error) {
+    console.error('Error initializing dashboard:', error)
+  }
 
-  // Optional: Set up periodic data refresh
-  const refreshInterval = setInterval(fetchDashboardData, 5 * 60 * 1000) // Refresh every 5 minutes
+  const refreshInterval = setInterval(() => {
+    store.dispatch('admin/fetchDashboardData')
+      .then(data => updateCharts(data.chartData))
+      .catch(error => console.error('Error refreshing dashboard:', error))
+  }, 5 * 60 * 1000)
 
   // Clean up interval on component unmount
   return () => clearInterval(refreshInterval)
@@ -184,6 +220,21 @@ defineExpose({
             <button class="action-btn" @click="handleVerifyProfessionals">
               Verify Professionals
             </button>
+            <ServiceDialog 
+              :is-open="serviceDialogState.isOpen"
+              :serviceToEdit="serviceDialogState.serviceToEdit"
+              @close="store.dispatch('admin/closeServiceDialog')"
+            />
+            <ServiceManagementDialog
+              :is-open="serviceManagementDialogState.isOpen"
+              @close="store.dispatch('admin/toggleServiceManagementDialog', false)"
+              @edit="handleServiceEdit"
+            />
+            <UserManagementDialog
+              :is-open="userManagementDialogState.isOpen"
+              @close="store.dispatch('admin/toggleUserManagementDialog', false)"
+              @show-profile="handleUserProfile"
+            />
           </template>
 
           <!-- Professional Buttons -->
@@ -278,7 +329,7 @@ defineExpose({
 .action-btn {
   width: 100%;
   padding: 1rem;
-  background-color: var(--primary-color);
+  background-color: var(--accent-color);
   color: var(--white);
   border-radius: 0.5rem;
   cursor: pointer;
@@ -287,7 +338,7 @@ defineExpose({
 }
 
 .action-btn:hover {
-  background-color: var(--accent-color);
+  background-color: var(--secondary-color);
 }
 
 .stats-cards {

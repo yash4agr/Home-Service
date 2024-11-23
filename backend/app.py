@@ -10,6 +10,7 @@ from flask_cors import CORS
 from endpoints.auth import auth_router
 from endpoints.admin import admin_router
 from endpoints.professional import professional_router
+from endpoints.service import service_router
 
 # Import database, stuff
 from database.models import db, UserLogin
@@ -77,6 +78,7 @@ def get_location():
 app.register_blueprint(auth_router, url_prefix = '/api/auth')
 app.register_blueprint(admin_router, url_prefix = '/api/admin')
 app.register_blueprint(professional_router, url_prefix="/api/professionals")
+app.register_blueprint(service_router, url_prefix="/api")
 
 # Create the tables if they don't exist
 with app.app_context():

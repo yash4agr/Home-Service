@@ -2,6 +2,9 @@ import redis
 import random
 import string
 import smtplib
+import  os
+import uuid
+from werkzeug.utils import secure_filename
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -39,4 +42,40 @@ def send_otp_email(to, otp):
     smtp_server.login(SENDER_ADDRESS, SENDER_PASSWORD)
     smtp_server.send_message(msg)
     smtp_server.quit()
+
+def handle_image_upload(image_file, service_id=None):
+    if not image_file:
+        return None
+        
+    try:
+        upload_dir = os.path.join('static', 'uploads', 'services')
+        file_ext = os.path.splitext(secure_filename(image_file.filename))[1].lower()
+        os.makedirs(upload_dir, exist_ok=True)
+        if service_id:
+            filename = f"service_{service_id}{file_ext}"
+        else:
+            filename = f"service_{uuid.uuid4().hex[:8]}{file_ext}"
+        file_path = os.path.join(upload_dir, filename)
+        
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        image_file.seek(0)
+        image_file.save(file_path)
+        path = os.path.relpath(file_path, start='static').replace(os.path.sep,'/')
+        return file_path
+        
+    except Exception as e:
+        print(f"Error handling image: {e}")
+        return None
+
+def handle_image_delete(file_path):
+    if not file_path:
+        return
+       
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except Exception as e:
+        print(f"Error deleting image: {e}")
 
