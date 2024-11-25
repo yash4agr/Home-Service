@@ -259,50 +259,6 @@ def profile():
     })
 
 
-@auth_router.route("/address", methods=["GET", "POST"])
-@jwt_required()
-def address():
-    user = UserLogin.query.filter_by(user_id = get_jwt_identity()).first()
-
-    if not user:
-        return jsonify({ "message": "User not found" }), 404
-
-    if request.method == "GET":
-        addresses = UserAddress.query.filter_by(user_login_id=user.id).all()
-        return jsonify([{
-            "id": addr.id,
-            "address_type": addr.address_type,
-            "street": addr.street,
-            "city": addr.city,
-            "state": addr.state,
-            "zip_code": addr.zip_code,
-            "country": addr.country
-        } for addr in addresses])
-
-    if request.method == "POST":
-        form = AddressUpdateForm()
-        if form.validate():
-            new_address = UserAddress(
-                user_login_id=user.id,
-                address_type=form.address_type.data,
-                street=form.street.data,
-                city=form.city.data,
-                state=form.state.data,
-                zip_code=form.zip_code.data,
-                country=form.country.data
-            )
-            try:
-                # Add address to database
-                db.session.add(new_address)
-                db.session.commit()
-                return jsonify({"message": "Address added successfully"}), 201
-        
-            except Exception as e:
-                db.session.rollback()
-                return jsonify({ "message": "An internal error occurred", "error": str(e) }), 500
-
-
-
 @auth_router.get('/refresh')
 @jwt_required(refresh=True)
 def refresh_access():

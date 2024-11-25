@@ -4,13 +4,13 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime, timezone
 
-from database.models import db, UserLogin, UserAddress, Professional, Services
-# from forms import ProfessionalSignupForm
+from database.models import db, UserLogin, UserAddress, Professional, Category
+
 
 professional_router = Blueprint("professional", __name__)
 
 # Configure file upload
-UPLOAD_FOLDER = 'uploads/resumes'
+UPLOAD_FOLDER = 'database/uploads/resumes'
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
 
 def allowed_file(filename):
@@ -67,17 +67,17 @@ def professional_signup():
             country=form_data.get('address.country', 'India'),
             address_type='professional'
         )
-
+        
         # Get or create service
-        service_category = form_data.get('serviceCategory')
-        service = Services.query.filter_by(name=service_category).first()
-        # if not service:
-        #     return jsonify({"message": "Invalid service category"}), 400
+        category_id  = form_data.get('serviceCategory')
+        category = Category.query.get(category_id)
+        if not category:
+            return jsonify({"message": "Invalid service category"}), 400
 
         # Create professional profile
         professional = Professional(
             user_login_id=user_id,
-            service_id=service.id,
+            category_id=category.id,
             experience=form_data.get('yearsOfExperience'),
             resume_path=resume_path,
             is_approved=False
@@ -87,7 +87,8 @@ def professional_signup():
         phone_number = form_data.get('phoneNumber')
         if phone_number:
             user.phone_number = phone_number
-            user.name = form_data.get('fullName', user.name)
+        user.name = form_data.get('fullName', user.name)
+        user.role = "professional"
 
         try:
             db.session.add(address)
@@ -101,8 +102,10 @@ def professional_signup():
                     "name": user.name,
                     "email": user.email,
                     "phone": user.phone_number,
-                    "service": service.name,
+                    "service": category.name,
                     "experience": professional.experience,
+                    "rating": professional.avg_rating,
+                    "total_services": professional.total_services,
                     "is_approved": professional.is_approved,
                     "address": {
                         "street": address.street,
@@ -122,6 +125,7 @@ def professional_signup():
             return jsonify({"message": "Database error occurred", "error": str(e)}), 500
 
     except Exception as e:
+        print(e)
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 @professional_router.route("/status", methods=["GET"])
@@ -135,9 +139,14 @@ def check_status():
             return jsonify({"message": "Professional profile not found"}), 404
             
         return jsonify({
+            "id": professional.id,
             "is_approved": professional.is_approved,
-            "service": professional.service.name,
-            "created_at": professional.created_at
+            "category": professional.category.name,
+            "experience": professional.experience,
+            "rating": professional.avg_rating,
+            "total_services": professional.total_services,
+            "created_at": professional.created_at.isoformat(),
+            "updated_at": professional.updated_at.isoformat()
         })
         
     except Exception as e:

@@ -6,6 +6,7 @@ import { Chart } from 'chart.js/auto'
 import ServiceDialog from '@/components/Service/service.vue'
 import ServiceManagementDialog from '@/components/Service/ServiceManagementDialog.vue'
 import UserManagementDialog from '@/components/User/UserDialog.vue'
+import VerifyProfessionalDialog from '@/components/User/VerifyProfessional.vue'
 
 // Store
 const store = useStore()
@@ -22,12 +23,17 @@ const isServiceDialogOpen = ref(false)
 const isManageDialogOpen = ref(false)
 const selectedService = ref(null)
 
+// Timer
+const isDisabled = ref(false)
+const timeLeft = ref(0)
+
 // Computed properties from store
 const isAdmin = computed(() => store.getters['admin/isAdmin'])
 const stats = computed(() => store.getters['admin/dashboardStats'])
 const serviceDialogState = computed(() => store.getters['admin/serviceDialogState'])
 const serviceManagementDialogState = computed(() => store.getters['admin/serviceManagementDialogState'])
 const userManagementDialogState = computed(() => store.getters['admin/userManagementDialogState'])
+const VerifyProfessionalDialogDialogState = computed(() => store.getters['admin/verifyProfessionalDialogState'])
 
 
 // Computed Properties
@@ -46,6 +52,23 @@ const fetchDashboardData = async () => {
 
   }
 }
+
+const startTimer = () => {
+  timeLeft.value = 30
+  const timer = setInterval(() => {
+    timeLeft.value--
+    if (timeLeft.value <= 0) {
+      clearInterval(timer)
+      isDisabled.value = false
+    }
+  }, 1000)
+}
+
+const buttonText = computed(() => {
+  return timeLeft.value > 0 
+    ? `Export Monthly Report in ${timeLeft.value}s` 
+    : 'Export Monthly Report'
+})
 
 // Initialize Charts
 const initializeCharts = () => {
@@ -135,19 +158,32 @@ const handleServiceEdit = (service) => {
 }
 
 const handleManageUsers = () => {
-  isManageDialogOpen.value = true
-  // Navigate to user management page or open management modal
-  // store.dispatch('users/openManagementView')
+  store.dispatch('admin/toggleUserManagementDialog', true)
 }
 
-const handleExportReport = () => {
-  // Trigger report export
-  // store.dispatch('reports/exportMonthlyReport')
+const handleUserProfile = (user) => {
+  store.commit('admin/SET_USER_PROFILE_DIALOG', { isOpen: true, user });
+}
+const handleCloseUserProfile = () => {
+  store.commit('admin/SET_USER_PROFILE_DIALOG', { isOpen: false, user: null });
+}
+
+const handleExportReport = async () => {
+  try {
+    isDisabled.value = true
+    
+    await store.dispatch('admin/exportMonthlyReport')
+    alert('Monthly report will be sent to your email within the next 24 hours')
+    
+    startTimer()
+  } catch (error) {
+    console.error('Error generating report:', error)
+    isDisabled.value = false
+  }
 }
 
 const handleVerifyProfessionals = () => {
-  // Open professional verification view
-  // store.dispatch('professionals/openVerificationView')
+  store.dispatch('admin/toggleVerifyProfessionalDialog', true)
 }
 
 // Lifecycle Hook
@@ -214,8 +250,8 @@ defineExpose({
             <button class="action-btn" @click="handleManageUsers">
               Manage Users
             </button>
-            <button class="action-btn" @click="handleExportReport">
-              Export Report
+            <button class="action-btn" @click="handleExportReport" :disabled="isDisabled">
+              {{ buttonText }}
             </button>
             <button class="action-btn" @click="handleVerifyProfessionals">
               Verify Professionals
@@ -233,6 +269,11 @@ defineExpose({
             <UserManagementDialog
               :is-open="userManagementDialogState.isOpen"
               @close="store.dispatch('admin/toggleUserManagementDialog', false)"
+              @show-profile="handleUserProfile"
+            />
+            <VerifyProfessionalDialog
+              :is-open="VerifyProfessionalDialogDialogState.isOpen"
+              @close="store.dispatch('admin/toggleVerifyProfessionalDialog', false)"
               @show-profile="handleUserProfile"
             />
           </template>

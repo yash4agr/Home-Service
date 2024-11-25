@@ -48,7 +48,7 @@ def handle_image_upload(image_file, service_id=None):
         return None
         
     try:
-        upload_dir = os.path.join('static', 'uploads', 'services')
+        upload_dir = os.path.join('database', 'uploads', 'services')
         file_ext = os.path.splitext(secure_filename(image_file.filename))[1].lower()
         os.makedirs(upload_dir, exist_ok=True)
         if service_id:

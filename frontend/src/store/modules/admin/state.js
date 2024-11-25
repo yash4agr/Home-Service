@@ -8,7 +8,14 @@ export default {
       isOpen: false
     },
     UserManagementDialog: {
-      isOpen: true
+      isOpen: false
+    },
+    UserProfileDialog: {
+      isOpen: false,
+      user: null
+    },
+    VerifyProfessionalDialog: {
+      isOpen: false
     }
   },
   
@@ -31,5 +38,24 @@ export default {
     categories: [],
     isLoading: false,
     error: null
-  }
+  },
+
+  // User data
+  users: [],
+  isLoading: false,
+  error: null,
+  selectedUser: null,
+  userDetails: {
+    address: null,
+    professionalDetails: null,
+    reviews: [],
+    stats: {
+      totalServices: 0,
+      pendingServices: 0,
+      averageRating: 0
+    }
+  },
+
+  // Professionals
+  professionals: [],
 }

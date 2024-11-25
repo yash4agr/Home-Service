@@ -107,13 +107,11 @@ const fetchUserProfile = async ({ commit, state }) => {
 
 const refreshAccessToken = async ({ commit, state }) => {
   try {
-    const config = {
-      headers: { 
-        Authorization: `Bearer ${state.refreshToken}` 
+    const response = await axios.get('/api/auth/refresh', {
+      headers: {
+        'Authorization': `Bearer ${state.refreshToken}`  // Use refresh token here
       }
-    };
-
-    const response = await axios.get('/api/auth/refresh', {}, config);
+    });
     
     commit('SET_TOKENS', { 
       accessToken: response.data.access_token,

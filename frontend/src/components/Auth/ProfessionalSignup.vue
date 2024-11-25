@@ -4,18 +4,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
 
-const SERVICE_CATEGORIES = [
-  "Web Development",
-  "Graphic Design", 
-  "Digital Marketing",
-  "IT Consulting",
-  "Content Writing",
-  "Software Engineering",
-  "Cloud Services",
-  "Cybersecurity",
-  "UX/UI Design",
-  "Data Analysis"
-];
+const SERVICE_CATEGORIES = computed(() => store.getters['admin/serviceCategories']);
 
 const STATES = [
   "Maharashtra", "Karnataka", "Tamil Nadu", "Delhi", "Gujarat"
@@ -294,6 +283,7 @@ watch(
         if (newValue === "true") {
             if (await checkAuthAndProceed()){
               if (newValue === "true" && !isOpen.value) {
+                store.dispatch('admin/fetchCategories')
                 store.dispatch("module1/toggleProfessionalSignupDialog", true);
               } else if (!newValue && isOpen.value) {
                 store.dispatch("module1/toggleProfessionalSignupDialog", false);
@@ -468,10 +458,10 @@ onMounted(() => {
           <option value="" disabled>Select a service category</option>
           <option 
             v-for="category in SERVICE_CATEGORIES" 
-            :key="category" 
-            :value="category"
+            :key="category.id" 
+            :value="category.id"
           >
-            {{ category }}
+            {{ category.name }}
           </option>
         </select>
         <span v-if="errorMessages.serviceCategory" class="error-text">

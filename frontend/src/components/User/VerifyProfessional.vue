@@ -14,20 +14,15 @@ const emit = defineEmits(['close', 'showProfile'])
 
 const store = useStore()
 const searchQuery = ref('')
-const selectedRole = ref('')
+const selectedCategory = ref('')
 const selectedUser = ref(null)
 let searchTimeout = null
 
 // Get users from store
-const users = computed(() => store.getters['admin/usersList'] || [])
+const users = computed(() => store.getters['admin/professionals'] || [])
 const userProfileDialogState = computed(() => store.getters['admin/userProfileDialogState'])
 const isLoading = computed(() => store.getters['admin/isUsersLoading'])
-
-const roles = [
-  { id: 'admin', name: 'Admin' },
-  { id: 'professional', name: 'Professional' },
-  { id: 'user', name: 'User' }
-]
+const categories = computed(() => store.getters['admin/serviceCategories'])
 
 const debounce = (callback, wait) => {
   return (...args) => {
@@ -39,17 +34,16 @@ const debounce = (callback, wait) => {
 // Search and filter functionality with null checks
 const filteredUsers = computed(() => {
   const query = searchQuery.value?.toLowerCase().trim() || ''
-  const role = selectedRole.value
-  
+  const categoryId = selectedCategory.value
   return users.value.filter(user => {
     const matchesSearch = !query || 
       user?.name?.toLowerCase().includes(query) ||
       user?.email?.toLowerCase().includes(query)
-    
-    const matchesRole = !role || user?.role === role
 
-    return matchesSearch && matchesRole
-  })
+    const matchesCategory = !categoryId || user.category_id === categoryId
+
+    return matchesSearch && matchesCategory 
+  }) || []
 })
 
 // Debounced search handler
@@ -57,20 +51,6 @@ const handleSearch = debounce((value) => {
   searchQuery.value = value || ''
 }, 300)
 
-// Ban/Unban user handler with error handling
-const handleToggleBan = async (userId, isBanned) => {
-  if (!userId) return
-  
-  const action = isBanned ? 'unban' : 'ban'
-  if (!confirm(`Are you sure you want to ${action} this user?`)) return
-  
-  try {
-    await store.dispatch('admin/toggleUserBan', { userId, isBanned: !isBanned })
-  } catch (error) {
-    console.error('Failed to update user status:', error)
-    alert(`Failed to ${action} user. Please try again.`)
-  }
-}
 
 // View profile handler
 const handleUserProfile = (user) => {
@@ -105,7 +85,8 @@ const handleDialogClose = () => {
 watch(() => props.isOpen, (newValue) => {
   if (newValue) {
     handleDialogOpen()
-    store.dispatch('admin/fetchUsers')
+    store.dispatch('admin/fetchProfessionalUsers')
+    store.dispatch('admin/fetchCategories')
   } else {
     handleDialogClose()
   }
@@ -121,7 +102,7 @@ watch(() => userProfileDialogState.value.isOpen, (newValue) => {
 watch(() => props.isOpen, (newValue) => {
   if (!newValue) {
     searchQuery.value = ''
-    selectedRole.value = ''
+    selectedCategory.value = ''
     selectedUser.value = null
   }
 })
@@ -158,7 +139,7 @@ onUnmounted(() => {
             <i class="ri-close-line" />
           </button>
 
-          <h2 class="user-title">Manage Users</h2>
+          <h2 class="user-title">Verify Professionals</h2>
 
           <!-- Search and Filter Section -->
           <div class="search-filter-container">
@@ -173,16 +154,16 @@ onUnmounted(() => {
             </div>
             <div class="role-filter">
               <select
-                v-model="selectedRole"
+                v-model="selectedCategory"
                 class="form-input"
               >
-                <option value="">All Roles</option>
+                <option value="">All Categories</option>
                 <option 
-                  v-for="role in roles"
-                  :key="role.id"
-                  :value="role.id"
+                  v-for="category in categories"
+                  :key="category.id"
+                  :value="category.id"
                 >
-                  {{ role.name }}
+                  {{ category.name }}
                 </option>
               </select>
             </div>
@@ -230,13 +211,12 @@ onUnmounted(() => {
                       class="user-role"
                       :class="user.role"
                     >
-                      {{ user.role }}
+                      {{ user.category }}
                     </span>
                     <span 
-                      v-if="user.is_banned" 
                       class="user-banned"
                     >
-                      Banned
+                    {{ user.pin_code }}
                     </span>
                   </div>
                 </div>
@@ -247,13 +227,6 @@ onUnmounted(() => {
                   @click="handleUserProfile(user)"
                 >
                   View Profile
-                </button>
-                <button
-                  class="action-button toggle-ban"
-                  :class="{ 'banned': user.is_banned }"
-                  @click="handleToggleBan(user.id, user.is_banned)"
-                >
-                  {{ user.is_banned ? 'Unblock' : 'Block' }}
                 </button>
               </div>
             </div>
