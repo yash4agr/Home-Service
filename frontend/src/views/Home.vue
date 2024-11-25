@@ -1,111 +1,19 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 
 const store = useStore()
 const searchQuery = ref('')
 
-const services = ref([
-  {
-    id: 1,
-    name: 'Home Cleaning',
-    rating: 2.5,
-    price: 500,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Regular', 'Deep Clean', 'Move-in/out'],
-    description: 'Professional home cleaning services tailored to your needs'
-  },
-  {
-    id: 2,
-    name: 'Plumbing',
-    rating: 4.8,
-    price: 49.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Repair', 'Installation', 'Emergency'],
-    description: '24/7 plumbing services for all your needs'
-  },
-  {
-    id: 3,
-    name: 'Electrical',
-    rating: 4.7,
-    price: 44.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Repair', 'Installation', 'Maintenance'],
-    description: 'Licensed electricians for your safety and peace of mind'
-  },
-  {
-    id: 4,
-    name: 'Painting',
-    rating: 4.6,
-    price: 39.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Interior', 'Exterior', 'Touch-up'],
-    description: 'Transform your space with our expert painters'
-  },
-  {
-    id: 5,
-    name: 'AC Repair',
-    rating: 4.9,
-    price: 59.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Service', 'Installation', 'Emergency'],
-    description: 'Expert AC repair and maintenance services'
-  },
-  {
-    id: 6,
-    name: 'Pest Control',
-    rating: 4.4,
-    price: 34.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['General', 'Termite', 'Mosquito'],
-    description: 'Effective pest control solutions for your home'
-  },
-]);
+const services = computed(() => store.getters['module2/servicesList'])
+const popularServices = computed(() => store.getters['module2/servicesPopular'])
 
-const popularServices = ref([
-  {
-    id: 5,
-    name: 'AC Repair',
-    rating: 4.9,
-    price: 59.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Service', 'Installation', 'Emergency'],
-    description: 'Expert AC repair and maintenance services'
-  },
-  {
-    id: 6,
-    name: 'Pest Control',
-    rating: 4.4,
-    price: 34.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['General', 'Termite', 'Mosquito'],
-    description: 'Effective pest control solutions for your home'
-  },
-  {
-    id: 7,
-    name: 'Carpentry',
-    rating: 4.6,
-    price: 45.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Repair', 'Installation', 'Custom'],
-    description: 'Custom carpentry and woodworking services'
-  },
-  {
-    id: 8,
-    name: 'Appliance Repair',
-    rating: 4.7,
-    price: 49.99,
-    image: '/src/assets/home-bg.jpg',
-    categories: ['Washing Machine', 'Refrigerator', 'Microwave'],
-    description: 'Quick and reliable appliance repair services'
-  }
-])
 
 const filteredServices = computed(() => {
   const query = searchQuery.value.toLowerCase()
   const results = services.value.filter(service => 
     service.name.toLowerCase().includes(query) ||
-    service.categories.some(cat => cat.toLowerCase().includes(query)) ||
+    service.tags.some(cat => cat.toLowerCase().includes(query)) ||
     service.description.toLowerCase().includes(query)
   )
   return results.length > 4 ? results.slice(0, 4) : results
@@ -113,9 +21,12 @@ const filteredServices = computed(() => {
 
 const addToCart = (service) => {
   store.dispatch('module2/addToCart', service)
-  // store.dispatch('setCartOpen', true) // Optionally open the cart when adding items
 }
 
+onMounted(() => {
+  store.dispatch('module2/fetchServices')
+  store.dispatch('module2/fetchCategories')
+})
 </script>
 
 <template>
@@ -147,7 +58,7 @@ const addToCart = (service) => {
                class="service-card"
                :class="{ 'animate-card': true }">
             <div class="service-image">
-              <img :src="service.image" :alt="service.name">
+              <img :src="service.img" :alt="service.name">
               <div class="service-overlay">
                 <button class="book-now" @click="addToCart(service)">Add to Cart</button>
               </div>
@@ -169,11 +80,11 @@ const addToCart = (service) => {
                 <span class="rating-number">{{ service.rating }}/5</span>
               </div>
               <div class="price">
-                Starting from ₹{{ service.price }}
+                Starting from ₹{{ service.base_price }}
               </div>
               <div class="categories">
-                <span v-for="(category, index) in service.categories" :key="index">
-                  {{ category }}
+                <span v-for="(tag, index) in service.tags" :key="index">
+                  {{ tag }}
                 </span>
               </div>
             </div>
@@ -191,7 +102,7 @@ const addToCart = (service) => {
                class="service-card"
                :class="{ 'animate-card': true }">
             <div class="service-image">
-              <img :src="service.image" :alt="service.name">
+              <img :src="service.img" :alt="service.name">
               <div class="service-overlay">
                 <button class="book-now" @click="addToCart(service)">Add to Cart</button>
               </div>
@@ -213,11 +124,11 @@ const addToCart = (service) => {
                 <span class="rating-number">{{ service.rating }}/5</span>
               </div>
               <div class="price">
-                Starting from ₹{{ service.price }}
+                Starting from ₹{{ service.base_price }}
               </div>
               <div class="categories">
-                <span v-for="(category, index) in service.categories" :key="index">
-                  {{ category }}
+                <span v-for="(tags, index) in service.tags" :key="index">
+                  {{ tags }}
                 </span>
               </div>
             </div>
