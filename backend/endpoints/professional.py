@@ -4,8 +4,8 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime, timezone
 
-from database.models import db, UserLogin, UserAddress, Professional, Category
-
+from database.models import db, UserLogin, UserAddress, Professional, Category, ServiceRequest
+from utils import redis_client
 
 professional_router = Blueprint("professional", __name__)
 
@@ -151,3 +151,80 @@ def check_status():
         
     except Exception as e:
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
+    
+@professional_router.route('/service_actions', methods=['POST'])
+@jwt_required()
+def service_actions():
+    current_user = UserLogin.query.get(get_jwt_identity())
+    professional = Professional.query.filter_by(user_login_id=current_user.id).first()
+    
+    data = request.get_json()
+    service_request_id = data.get('service_request_id')
+    action = str(data.get('action')).strip()  # 'accept', 'reject', 'completed', 'canceled'
+    
+    service_request = ServiceRequest.query.get(service_request_id)
+    
+    if not service_request:
+        return jsonify({'message': 'Service request not found'}), 404
+    
+    if action == 'accept':
+
+        if not professional:
+            return jsonify({'message': 'Not a registered professional'}), 403
+        # Check if service request is still pending
+        if service_request.status != 'pending':
+            return jsonify({'message': 'Service request cannot be accepted'}), 400
+        
+        service_request.professional_id = professional.id
+        service_request.status = 'accepted'
+        
+        # Clear any previous rejections in Redis
+        redis_client.delete(f'service_request_rejections:{service_request_id}')
+    
+    elif action == 'reject':
+        if not professional:
+            return jsonify({'message': 'Not a registered professional'}), 403
+        
+        # Track rejections in Redis
+        key = f'service_request_rejections:{service_request_id}'
+        redis_client.sadd(key, professional.id)
+        
+        # Check total rejections
+        total_professionals_in_area = Professional.query.join(UserLogin) \
+            .join(UserAddress) \
+            .filter(
+                Professional.category_id == service_request.service.category_id,
+                Professional.is_approved == True,
+                UserAddress.zip_code == service_request.address.zip_code
+            ).count()
+        
+        rejected_count = redis_client.scard(key)
+        
+        if rejected_count >= total_professionals_in_area:
+            service_request.status = 'rejected'
+    
+    elif action == 'completed':
+        # Validate completion
+        if service_request.professional_id == professional.id or service_request.customer_id == get_jwt_identity():
+            rating = data.get('rating')
+            review = data.get('review')
+            
+            service_request.complete_service(rating=rating, review=review)
+        else:
+            return jsonify({'message': 'Not authorized to complete this service'}), 403
+        
+        
+    
+    elif action == "canceled":
+        print("hry")
+        if professional:
+            if service_request.professional_id == professional.id:
+                service_request.status = 'canceled by professional'
+        elif service_request.customer_id == get_jwt_identity():
+            print("hry")
+            service_request.status = 'canceled by customer'
+        else:
+            return jsonify({'message': 'Not authorized to complete this service'}), 403
+    
+    db.session.commit()
+    return jsonify({'message': f'Service request {action}d successfully'}), 200

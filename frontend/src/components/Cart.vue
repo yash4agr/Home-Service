@@ -21,7 +21,7 @@ const emit = defineEmits(['update:isCartOpen'])
 const cartItems = computed(() => store.getters['module2/cartItems'])
 // Calculate total
 const cartTotal = computed(() => {
-  return cartItems.value.reduce((total, item) => total + (item.price * getServiceHours(item.id)), 0);
+  return cartItems.value.reduce((total, item) => total + (item.base_price * getServiceHours(item.id)), 0);
 })
 
 const toggleCart = () => {
@@ -33,13 +33,13 @@ const toggleCart = () => {
       }
     });
   } else {
-    const query = { ...route.query };
-    delete query.cart;
-    router.push({
-      path: route.path,
-      query,
-      hash: route.hash,
-    });
+    // const query = { ...route.query };
+    // delete query.cart;
+    // router.push({
+    //   path: route.path,
+    //   query,
+    //   hash: route.hash,
+    // });
   }
   emit('update:isCartOpen', !props.isCartOpen)
 }
@@ -67,26 +67,17 @@ const getServiceHours = (serviceId) => {
 // Calculate service total
 const getServiceTotal = (service) => {
   const hours = getServiceHours(service.id)
-  return (service.price * hours).toFixed(2)
+  return (service.base_price * hours).toFixed(2)
 }
 
 // Handle booking
 const handleBooking = () => {
-  // Create booking with selected services and hours
-  const booking = cartItems.value.map(item => ({
-    serviceId: item.id,
-    hours: getServiceHours(item.id),
-    price: item.price,
-    total: item.price * getServiceHours(item.id)
-  }))
-  
-  store.dispatch('module2/createBooking', booking)
   router.push({ 
-      query: { 
-        ...route.query, 
-        booking: 'true' 
-      }
-    });
+    query: { 
+      ...route.query, 
+      booking: 'true' 
+    }
+  });
   toggleCart()
 }
 </script>
@@ -120,11 +111,11 @@ const handleBooking = () => {
             
             <div v-else class="cart-items">
               <div v-for="item in cartItems" :key="item.id" class="cart-item">
-                <img :src="item.image" :alt="item.name" class="cart-item-image">
+                <img :src="item.img" :alt="item.name" class="cart-item-image">
                 
                 <div class="cart-item-details">
                   <h3 class="cart-item-title">{{ item.name }}</h3>
-                  <p class="cart-item-price">₹{{ item.price }}/hr</p>
+                  <p class="cart-item-price">₹{{ item.base_price }}/hr</p>
                   
                   <div class="hours-selector">
                     <label :for="'hours-' + item.id">Hours needed:</label>

@@ -11,6 +11,7 @@ from endpoints.auth import auth_router
 from endpoints.admin import admin_router
 from endpoints.professional import professional_router
 from endpoints.service import service_router
+from endpoints.bookings import bookings_router
 
 # Import database, stuff
 from database.models import db, UserLogin
@@ -79,6 +80,7 @@ app.register_blueprint(auth_router, url_prefix = '/api/auth')
 app.register_blueprint(admin_router, url_prefix = '/api/admin')
 app.register_blueprint(professional_router, url_prefix="/api/professionals")
 app.register_blueprint(service_router, url_prefix="/api")
+app.register_blueprint(bookings_router, url_prefix="/api/bookings")
 
 # Create the tables if they don't exist
 with app.app_context():

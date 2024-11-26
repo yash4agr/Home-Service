@@ -5,7 +5,6 @@ import { useStore } from 'vuex'
 import { RouterLink, useRouter } from 'vue-router'
 import Cart from '@/components/Cart.vue'
 import ProfessionalSignup from '../Auth/ProfessionalSignup.vue'
-import Notification from '@/components/Notification.vue'
 import Bookings from '@/components/Bookings/Bookings.vue'
 import SignupDialog from '@/components/Auth/Signup.vue'
 import LoginDialog from '@/components/Auth/Login.vue'
@@ -13,7 +12,6 @@ import LoginDialog from '@/components/Auth/Login.vue'
 const router = useRouter()
 const route = useRouter()
 const store = useStore()
-// const loggedIn = ref(false)
 
 const isScrolled = ref(false)
 const currentTheme = ref('light')
@@ -28,16 +26,18 @@ const currentUser = computed(() => store.getters['module1/currentUser'])
 
 const openLogin = () => {
   store.dispatch('module1/toggleLoginDialog', true);
-  router.push({ 
-  query: { 
-    ...route.query, 
-    login: 'true' 
-  }
-});
+  router.push({
+    query: {
+      ...route.query,
+      login: 'true'
+    }
+  });
 };
 
 const handleLogout = () => {
   store.dispatch('module1/logout');
+  showProfileDropdown.value = false
+  router.push('/')
 };
 
 // Cart-related computed properties
@@ -46,11 +46,10 @@ const isCartOpen = computed({
   set: (value) => store.dispatch('module2/setCartOpen', value)
 })
 
-// Notifications
-const notifications = computed(() => store.getters['module2/cartItems'] || [])
-const unreadNotifications = computed(() => 
-  notifications.value.filter(n => !n.read).length
-)
+const isBookingOpen = computed({
+  get: () => store.getters['module2/isBookingOpen'],
+  set: (value) => store.dispatch('module2/setBookingOpen', value)
+})
 
 function handleScroll() {
   isScrolled.value = window.scrollY > 0
@@ -67,7 +66,7 @@ async function getCurrentLocation() {
   isLocationLoading.value = true
   try {
     const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject,{
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
         timeout: 5000,
         maximumAge: 0
       })
@@ -85,12 +84,6 @@ async function getCurrentLocation() {
   }
 }
 
-function logout() {
-  store.dispatch('logout')
-  showProfileDropdown.value = false
-  // Redirect to login page
-  router.push('/')
-}
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
@@ -132,22 +125,10 @@ function toggleTheme() {
 
         <div class="navbar-right">
           <!-- Theme Toggle -->
-          <button 
-            class="nav-icon"
-            @click="toggleTheme"
-            :aria-label="currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
-            >
+          <button class="nav-icon" @click="toggleTheme"
+            :aria-label="currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'">
             <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" aria-hidden="true"></i>
           </button>
-
-          <!-- Notifications -->
-          <RouterLink to="/" class="nav-icon" aria-label="Notifications">
-            <i class="ri-notification-4-line" aria-hidden="true"></i>
-            <span v-if="unreadNotifications" class="notification-badge" role="status">
-              {{ unreadNotifications }}
-            </span>
-          </RouterLink>
-          
 
           <!-- Cart -->
           <div class="nav-icon-wrapper">
@@ -155,33 +136,29 @@ function toggleTheme() {
           </div>
 
           <!-- Bookings -->
-          <RouterLink to="/" class="nav-icon" aria-label="Bookings">
-            <i class="ri-calendar-line" aria-hidden="true"></i>
-          </RouterLink>
+          <div class="nav-icon-wrapper">
+            <Bookings v-model:isBookingsOpen="isBookingOpen" />
+          </div>
 
           <!-- Profile -->
-          <template v-if="!isLoggedIn">
-            <button @click="openLogin" class="nav-icon" aria-label="Profile">
-              <i class="ri-user-3-line" aria-hidden="true"></i>
-            </button>
-          </template>
-          <template v-else class="profile-dropdown" ref="profileRef">
-            <button 
-              class="nav-icon"
-              @click="showProfileDropdown1 = !showProfileDropdown1"
-            >
-              <i class="ri-user-3-line"></i>
-            </button>
-            <div 
-              v-if="showProfileDropdown1"
-              class="dropdown-menu"
-            >
-              <button @click="handleLogout" class="dropdown-item">
-                <i class="ri-logout-box-line"></i>
-                Logout
+          <div class="profile-dropdown">
+            <template v-if="!isLoggedIn">
+              <button @click="openLogin" class="nav-icon" aria-label="Profile">
+                <i class="ri-user-3-line" aria-hidden="true"></i>
               </button>
-            </div>
-          </template>
+            </template>
+            <template v-else>
+              <button class="nav-icon" @click="showProfileDropdown = !showProfileDropdown">
+                <i class="ri-user-3-line"></i>
+              </button>
+              <div v-if="showProfileDropdown" class="dropdown-menu">
+                <button @click="handleLogout" class="dropdown-item">
+                  <i class="ri-logout-box-line"></i>
+                  Logout
+                </button>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
     </nav>
@@ -198,64 +175,49 @@ function toggleTheme() {
           <span>{{ currentLocation }}</span>
         </div>
       </div>
-
-      <!-- Bottom Bar -->
-      
     </nav>
   </div>
 
+  <!-- Bottom Bar -->
   <nav class="mobile-nav" aria-label="Mobile bottom navigation">
     <div class="mobile-bottom-bar">
-        <button class="nav-icon" @click="toggleTheme" :aria-label="currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'">
-          <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" aria-hidden="true"></i>
-        </button>
+      <button class="nav-icon" @click="toggleTheme"
+        :aria-label="currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'">
+        <i :class="currentTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line'" aria-hidden="true"></i>
+      </button>
 
-        <RouterLink to="/" class="nav-icon" aria-label="Notifications">
-            <i class="ri-notification-4-line" aria-hidden="true"></i>
-            <span v-if="unreadNotifications" class="notification-badge" role="status">
-              {{ unreadNotifications }}
-            </span>
-          </RouterLink>
 
-          <div class="nav-icon-wrapper">
-            <Cart v-model:isCartOpen="isCartOpen" />
-          </div>
+      <div class="nav-icon-wrapper">
+        <Cart v-model:isCartOpen="isCartOpen" />
+      </div>
 
-        <RouterLink to="/" class="nav-icon" aria-label="Bookings">
-          <i class="ri-calendar-line" aria-hidden="true"></i>
-        </RouterLink>
+      <div class="nav-icon-wrapper">
+        <Bookings v-model:isBookingsOpen="isBookingOpen" />
+      </div>
 
+      <div class="profile-dropdown">
         <template v-if="!isLoggedIn">
-            <button @click="openLogin" class="nav-icon" aria-label="Profile">
-              <i class="ri-user-3-line" aria-hidden="true"></i>
+          <button @click="openLogin" class="nav-icon" aria-label="Profile">
+            <i class="ri-user-3-line" aria-hidden="true"></i>
+          </button>
+        </template>
+        <template v-else>
+          <button class="nav-icon" @click="showProfileDropdown1 = !showProfileDropdown1">
+            <i class="ri-user-3-line"></i>
+          </button>
+          <div v-if="showProfileDropdown1" class="dropdown-menu">
+            <button @click="handleLogout" class="dropdown-item">
+              <i class="ri-logout-box-line"></i>
+              Logout
             </button>
-          </template>
-          <template v-else class="profile-dropdown" ref="profileRef">
-            <button 
-              class="nav-icon"
-              @click="showProfileDropdown = !showProfileDropdown"
-            >
-              <i class="ri-user-3-line"></i>
-            </button>
-            <div 
-              v-if="showProfileDropdown"
-              class="dropdown-menu"
-            >
-              <button @click="handleLogout" class="dropdown-item">
-                <i class="ri-logout-box-line"></i>
-                Logout
-              </button>
-            </div>
-          </template>
-        </div>
-      </nav>
-    <LoginDialog />
-    <SignupDialog />
-    <ProfessionalSignup />
-    <!-- <Bookings /> -->
-    <Bookings
-    v-model:isBookingsOpen="h"
-/>
+          </div>
+        </template>
+      </div>
+    </div>
+  </nav>
+  <LoginDialog />
+  <SignupDialog />
+  <ProfessionalSignup />
 </template>
 
 <style scoped>
@@ -322,18 +284,6 @@ function toggleTheme() {
   font-size: 1.25rem;
 }
 
-.notification-badge {
-  position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: 9999px;
-  padding: 0.125rem 0.375rem;
-  font-size: 0.75rem;
-  min-width: 1.25rem;
-  text-align: center;
-}
 
 .profile-dropdown {
   position: relative;
@@ -366,6 +316,7 @@ function toggleTheme() {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

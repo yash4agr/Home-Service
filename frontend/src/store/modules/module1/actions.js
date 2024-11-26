@@ -45,7 +45,8 @@ const login = async ({ commit }, credentials) => {
       }
     });
 
-    const {access_token, refresh_token, user} = response.data;
+    const { access_token, refresh_token, user } = response.data;
+    
     commit('SET_TOKENS', {
       accessToken: access_token,
       refreshToken: refresh_token
@@ -109,7 +110,7 @@ const refreshAccessToken = async ({ commit, state }) => {
   try {
     const response = await axios.get('/api/auth/refresh', {
       headers: {
-        'Authorization': `Bearer ${state.refreshToken}`  // Use refresh token here
+        'Authorization': `Bearer ${state.refreshToken}`
       }
     });
     
@@ -132,7 +133,7 @@ const verifyOTP = async  ({ commit }, { email, otp, type }) => {
       otp,
       type
     });
-
+    commit('UPDATE_EMAIL_VERIFICATION', true)
     return response.data;
   } catch (error) {
     throw error;

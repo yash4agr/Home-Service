@@ -52,7 +52,7 @@ onMounted(() => {
 
 .google-button-wrapper {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 
 .google-button-wrapper.loaded {

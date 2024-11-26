@@ -19,7 +19,7 @@ const routes = [
   {
     path: '/professional-dashboard',
     name: 'professional-dashboard',
-    component: () => import('@/views/dashboard.vue'),
+    component: () => import('@/views/ProfessionalDashboard.vue'),
     meta: { 
       requiresAuth: true,
       role: 'professional'

@@ -9,14 +9,28 @@ const cartTotal = state => state.cart.reduce((total, item) => total + (item.pric
 const cartItemCount = state => state.cart.reduce((count, item) => count + item.quantity, 0)
 const isCartOpen = state => state.isCartOpen
 
+const bookingsItems = state => state.bookings
+const isBookingOpen = state => state.isBookingOpen
+
+const isBookingDialogOpen = state => state.bookingDialogOpen
+const error = state => state.error
+const isLoading = state => state.loading
+
 export default {
     servicesList,
     servicesPopular,
     serviceCategories,
     isServicesLoading,
-    
+
     cartItems,
     cartTotal,
     cartItemCount,
     isCartOpen,
+
+    bookingsItems,
+    isBookingOpen,
+
+    isBookingDialogOpen,
+    error,
+    isLoading,
     }

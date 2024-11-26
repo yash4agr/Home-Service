@@ -52,7 +52,7 @@ const isFormValid = ref({
 const availableStates = ref(STATES["India"] || []);
 
 // Computed
-// const isOpen = computed(() => store.getter['module2/checkServiceability']);
+const isOpen = computed(() => store.getters['module2/isBookingDialogOpen']);
 // const isOpen = computed(() => true);
 const minDate = computed(() => {
     const date = new Date();
@@ -88,13 +88,21 @@ const nextStep = async () => {
     if (currentStep.value === 1 && isFormValid.value.stepOne) {
         // Check if we serve at this location
         try {
+            // Get cart items to pass along with pincode
+            const cartItems = store.getters['module2/cartItems'];
+            const serviceIds = cartItems.map(item => item.id);
+            console.log(cartItems, serviceIds)
+            // Dispatch serviceability check with service IDs and pincode
             const isServiceable = await store.dispatch(
-                'module2/checkServiceability',
-                bookingData.value.address
+                'module2/checkServiceability', 
+                {
+                    pincode: bookingData.value.address.pincode,
+                    serviceIds: serviceIds
+                }
             );
 
             if (!isServiceable) {
-                errorMessage.value = "Sorry, we don't serve at your location yet.";
+                errorMessage.value = "Sorry, we don't serve these services at your location yet.";
                 return;
             }
 
@@ -119,16 +127,16 @@ const handleSubmit = async () => {
         errorMessage.value = "Please select service date and time.";
         return;
     }
-
     try {
-        await store.dispatch('module2/createBooking', {
+        // Create booking with all necessary data
+        const bookingResponse = await store.dispatch('module2/createBooking', {
             ...bookingData.value,
             services: store.getters['module2/cartItems'],
             paymentMethod: 'cash'
         });
 
         closeDialog();
-        router.push('/bookings');
+        router.push('/?bookings=true');
     } catch (error) {
         errorMessage.value = error.response?.data?.message || "Booking failed. Please try again.";
     }
@@ -136,14 +144,14 @@ const handleSubmit = async () => {
 
 // Dialog Controls
 const closeDialog = () => {
-    const query = { ...route.query };
-    delete query.booking;
-    router.push({
-        path: route.path,
-        query,
-        hash: route.hash,
-    });
-    store.dispatch("module1/toggleBookingDialog", false);
+    // const query = { ...route.query };
+    // delete query.booking;
+    // router.push({
+    //     path: route.path,
+    //     query,
+    //     hash: route.hash,
+    // });
+    store.dispatch("module2/toggleBookingDialog", false);
 };
 
 // Authentication Check
@@ -154,7 +162,7 @@ const checkAuthAndProceed = async () => {
     }
 
     if (!store.getters['module1/isEmailVerified']) {
-        const email = store.getters['module1/userEmail'];
+        const email = store.getters['module1/currentUser']?.email;
         router.push(`/?verify-email=true&email=${email}`);
         return false;
     }
@@ -168,7 +176,7 @@ watch(
     async (newValue) => {
         if (newValue === "true") {
             if (await checkAuthAndProceed()) {
-                store.dispatch("module1/toggleBookingDialog", true);
+                store.dispatch("module2/toggleBookingDialog", true);
             }
         }
     },
@@ -274,7 +282,7 @@ watch(
                 <button class="auth-button secondary" type="button" @click="prevStep">
                     Previous
                 </button>
-                <button class="auth-button" type="submit" :disabled="!isFormValid.stepTwo">
+                <button class="auth-button" type="submit" :disabled="!isFormValid.stepTwo" @click="handleSubmit">
                     Confirm Booking
                 </button>
             </template>

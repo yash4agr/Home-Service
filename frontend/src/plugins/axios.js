@@ -28,8 +28,9 @@ axios.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                await store.dispatch('module1/refreshAccessToken');
-                
+                if (store.state.module1.accessToken){
+                    await store.dispatch('module1/refreshAccessToken');
+                }
                 // Update the original request with new token
                 const newToken = store.state.module1.accessToken;
                 originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
