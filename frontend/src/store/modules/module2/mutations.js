@@ -1,7 +1,7 @@
 // Services
 const SET_SERVICES_LIST = (state, services) => {
   state.services.list = services
-  state.services.popular = services.filter(service => service.rating > 4)
+  state.services.popular = services.filter(service => service.rating >= 4)
   }
     
 const SET_SERVICES_CATEGORIES = (state, categories) => {

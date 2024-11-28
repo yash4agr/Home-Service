@@ -27,8 +27,8 @@ const fetchDashboardData = async ({ commit }) => {
     const data = {
       stats: response.data.stats,
       chartData: {
-        serviceData: response.data.serviceRequestData,
-        revenueData: response.data.ratingData,
+        serviceData: response.data.serviceData,
+        revenueData: response.data.revenueData,
         days: response.data.days
       }
     }

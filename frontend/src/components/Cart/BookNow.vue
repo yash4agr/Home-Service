@@ -14,7 +14,6 @@ const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
     return `${hour}:00`;
 });
 
-// States for India (reusing from your example)
 const STATES = {
     "India": [
         "Chhattisgarh"
@@ -53,7 +52,6 @@ const availableStates = ref(STATES["India"] || []);
 
 // Computed
 const isOpen = computed(() => store.getters['module2/isBookingDialogOpen']);
-// const isOpen = computed(() => true);
 const minDate = computed(() => {
     const date = new Date();
     date.setDate(date.getDate());
@@ -136,6 +134,8 @@ const handleSubmit = async () => {
         });
 
         closeDialog();
+        cartItems.value = [];
+        cartItems.value.update()
         router.push('/?bookings=true');
     } catch (error) {
         errorMessage.value = error.response?.data?.message || "Booking failed. Please try again.";

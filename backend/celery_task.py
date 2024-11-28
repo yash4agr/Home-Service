@@ -50,7 +50,7 @@ from app import celery
 @celery.task
 def send_daily_professional_reminders():
     # Find professionals with pending service requests
-    pending_requests = ServiceRequest.query.filter_by(status='pending').all()
+    pending_requests = ServiceRequest.query.filter_by(status='accepted').all()
     
     for request in pending_requests:
         # Check if professional exists and has pending requests
@@ -74,7 +74,7 @@ def send_daily_professional_reminders():
             Request Date: {request.date_of_request}
             Status: Pending
             
-            Please log in to your dashboard to accept or reject this request.
+            Please complete the service on time.
             
             Best regards,
             Home Service Team

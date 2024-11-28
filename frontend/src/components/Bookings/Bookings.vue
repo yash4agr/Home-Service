@@ -130,10 +130,11 @@ const isReviewReadOnly = computed(() =>
                 <div class="booking-item-details">
                   <div class="booking-item-header">
                     <div class="booking-item-text">
-                      <h3 class="booking-item-title">{{ booking.service.name }} (₹{{ booking.service.base_price }}/hr)</h3>
+                      <h3 class="booking-item-title">{{ booking.service.name }} (₹{{ booking.total_amount? booking.total_amount : booking.service.base_price+"/hr" }})</h3>
                       <template v-if="store.getters['module1/userRole'] === 'user'"> 
                         <template v-if="booking.status !== 'pending'"> 
                           <p class="booking-professional">Professional: {{ booking.professional_details?.name || "NA"}}</p>
+                          <p class="booking-professional">Request time: {{ booking.date_of_request.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })|| "NA"}}</p>
                           <p class="booking-hours">Contact: {{ booking.professional_details?.phone }}</p>
                         </template>
                           <p class="booking-status" :class="booking.status.toLowerCase()">

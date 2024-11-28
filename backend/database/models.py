@@ -15,7 +15,7 @@ class UserLogin(db.Model):
     password = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(10), nullable=False, default="user")
 
-    phone_number = db.Column(db.String(20), nullable=True, unique=True)
+    phone_number = db.Column(db.String(20), nullable=True)
     is_email_verified = db.Column(db.Boolean, default=False)
 
     is_banned = db.Column(db.Boolean, default=False)

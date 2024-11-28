@@ -1,6 +1,6 @@
 <script setup>
 import BaseAuth from "@/components/Auth/BaseAuth.vue";
-import SocialLogin from "@/components/SocialLogin.vue";
+import SocialLogin from "@/components/Auth/SocialLogin.vue";
 import EmailVerification from "@/components/Auth/EmailVerification.vue";
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";

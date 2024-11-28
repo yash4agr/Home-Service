@@ -23,7 +23,7 @@ def init_celery(app):
     },
     'monthly-activity-report': {
         'task': 'celery_task.send_monthly_activity_report',
-        'schedule':60 * 60 * 24 * 30,
+        'schedule': 60 * 60 * 24 * 30,
     },
     'check-expired-service-requests': {
         'task': 'celery_task.check_expired_service_requests',

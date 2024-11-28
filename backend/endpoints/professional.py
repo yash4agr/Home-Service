@@ -200,7 +200,7 @@ def service_actions():
     
     elif action == 'completed':
         # Validate completion
-        if service_request.professional_id == professional.id or service_request.customer_id == get_jwt_identity():
+        if service_request.customer_id == get_jwt_identity() or service_request.professional_id == professional.id:
             rating = data.get('rating')
             review = data.get('review')
             
@@ -260,7 +260,8 @@ def get_professional_bookings():
         if type == 'pending_request':
             query = query.filter(
                 ServiceRequest.status == "pending",
-                ServiceRequest.address.has(zip_code=professional_address.zip_code)
+                ServiceRequest.address.has(zip_code=professional_address.zip_code),
+                ServiceRequest.service.has(category_id=professional.category_id)
             )
         elif type == 'accepted_request':
             query = query.filter(
@@ -283,6 +284,7 @@ def get_professional_bookings():
                 'service': request.service.to_dict(),
                 'status': request.status,
                 'date_of_request': request.date_of_request.isoformat(),
+                'total_amount': request.total_amount,
                 'address': request.address.to_dict(),
                 'customer_details': {
                     'name': request.customer.name,
@@ -376,12 +378,14 @@ def get_past_seven_days_service_data(professional_id):
     ratings = [0] * 7
 
     for day, count in daily_requests:
-        if day in days:
-            service_requests[days.index(day)] = count
+        day_date = datetime.strptime(day, '%Y-%m-%d').date()
+        if day_date in days:
+            service_requests[days.index(day_date)] = count
     
     for day, rating in daily_ratings:
-        if day in days:
-            ratings[days.index(day)] = round(rating, 2)
+        day_date = datetime.strptime(day, '%Y-%m-%d').date()
+        if day_date in days:
+            ratings[days.index(day_date)] = round(rating, 2)
     
     return {
         'service_requests': service_requests,

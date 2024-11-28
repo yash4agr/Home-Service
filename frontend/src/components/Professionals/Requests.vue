@@ -24,12 +24,8 @@ const store = useStore()
 const router = useRouter()
 const route = useRoute()
 
-// Use passed bookings if provided, otherwise use store
-const bookings = computed(() => props.bookingsData 
-//   props.bookingsData.length > 0 
-//     ? props.bookingsData 
-//     : store.getters['module2/bookingsItems']
-)
+
+const bookings = computed(() => props.bookingsData )
 
 const reviewData = ref({
   rating: 1,
@@ -146,6 +142,7 @@ const isReviewReadOnly = computed(() =>
                       <template v-if="store.getters['module1/userRole'] === 'user'"> 
                         <template v-if="booking.status !== 'pending'"> 
                           <p class="booking-professional">Professional: {{ booking.professional_details?.name || "NA"}}</p>
+                          <p class="booking-professional">Request time: {{ booking.date_of_request || "NA"}}</p>
                           <p class="booking-hours">Contact: {{ booking.professional_details?.phone }}</p>
                         </template>
                           <p class="booking-status" :class="booking.status.toLowerCase()">
@@ -154,6 +151,7 @@ const isReviewReadOnly = computed(() =>
                       </template>
                       <template v-else> 
                         <p class="booking-professional"> Customer: {{ booking.customer_details?.name || "NA"}}</p>
+                        <p class="booking-professional">Request time: {{ booking.date_of_request.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })|| "NA"}}</p>
                           <p class="booking-hours"> Contact: {{ booking.customer_details?.phone }}</p>
                           <p class="booking-status"> Address: {{ booking.address.street + " , "+ booking.address.city }} 
                           </p>

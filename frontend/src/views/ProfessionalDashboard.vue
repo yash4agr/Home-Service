@@ -20,17 +20,6 @@ const revenueChart = ref(null)
 const isApproved = computed(() => store.getters['professional/isApproved'])
 const stats = computed(() => store.getters['professional/dashboardStats'])
 
-
-// Method to fetch dashboard data
-const fetchDashboardData = async () => {
-    try {
-        const response = await store.dispatch('professional/fetchDashboardData')
-        updateCharts(response.chartData)
-    } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-    }
-}
-
 const isRequestsOpen = ref(false)
 const title = ref('')
 const requests = ref([])
@@ -76,92 +65,104 @@ const handlePastServices = async() => {
 }
 
 
-// Initialize Charts
-const initializeCharts = () => {
-    if (!serviceChartRef.value || !revenueChartRef.value) return
-    const chartData = store.getters['professional/dashboardChartData']
-    // Service Requests Chart
-    const serviceCtx = serviceChartRef.value.getContext('2d')
-    serviceChart.value = new Chart(serviceCtx, {
-        type: 'line',
-        data: {
-            labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
-            datasets: [{
-                label: 'Service Requests',
-                data: chartData.serviceData || [],
-                borderColor: '#dfbc90',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Service Requests Over Time'
-                }
-            }
-        }
-    })
-
-    // Revenue/Rating Chart
-    const revenueCtx = revenueChartRef.value.getContext('2d')
-    revenueChart.value = new Chart(revenueCtx, {
-        type: 'bar',
-        data: {
-            labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
-            datasets: [{
-                label: 'Ratings',
-                data: chartData.revenueData || [],
-                backgroundColor: '#dfbc90'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Last 7 Days Ratings'
-                }
-            }
-        }
-    })
-}
-
-// Update Charts with New Data
-const updateCharts = (data) => {
-    if (serviceChart.value && data?.serviceData) {
-        serviceChart.value.data.datasets[0].data = data.serviceData
-        serviceChart.value.update()
-    }
-
-    if (revenueChart.value && data?.revenueData) {
-        revenueChart.value.data.datasets[0].data = data.revenueData
-        revenueChart.value.update()
-    }
-}
-
 // Lifecycle Hook
 onMounted(async () => {
+  try {
     await store.dispatch('professional/status')
-    initializeCharts()
-    try {
-        const dashboardData = await store.dispatch('professional/fetchDashboardData')
-        updateCharts(dashboardData.chartData)
-    } catch (error) {
-        console.error('Error initializing dashboard:', error)
+    const dashboardData = await store.dispatch('professional/fetchDashboardData')
+    if (serviceChart.value) {
+      serviceChart.value.destroy()
+      serviceChart.value = null
+    }
+    if (revenueChart.value) {
+      revenueChart.value.destroy()
+      revenueChart.value = null
     }
 
-    const refreshInterval = setInterval(() => {
-        store.dispatch('professional/fetchDashboardData')
-            .then(data => updateCharts(data.chartData))
-            .catch(error => console.error('Error refreshing dashboard:', error))
-    }, 5 * 60 * 1000)
+    // Ensure we have a fresh context each time
+    if (serviceChartRef.value && dashboardData?.chartData) {
+      const chartData = dashboardData.chartData
+      const serviceCtx = serviceChartRef.value.getContext('2d')
+      serviceChart.value = new Chart(serviceCtx, {
+        type: 'line',
+        data: {
+          labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
+          datasets: [{
+            label: 'Service Requests',
+            data: chartData.serviceData || [],
+            borderColor: '#dfbc90',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Service Requests Over Time'
+            }
+          }
+        }
+      })
+    }
 
-    // Clean up interval on component unmount
-    return () => clearInterval(refreshInterval)
+    if (revenueChartRef.value && dashboardData?.chartData) {
+      const chartData = dashboardData.chartData
+      const revenueCtx = revenueChartRef.value.getContext('2d')
+      revenueChart.value = new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+          labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
+          datasets: [{
+            label: 'Revenue',
+            data: chartData.revenueData || [],
+            backgroundColor: '#dfbc90'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Last 7 Days Revenue'
+            }
+          }
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error initializing dashboard:', error)
+  }
+
+  const refreshInterval = setInterval(async () => {
+    try {
+      const dashboardData = await store.dispatch('professional/fetchDashboardData')
+      
+      // Completely recreate charts with new data
+      if (serviceChart.value && dashboardData?.chartData) {
+        serviceChart.value.data.labels = dashboardData.chartData.days || ['1', '2', '3', '4', '5', '6', '7']
+        serviceChart.value.data.datasets[0].data = dashboardData.chartData.serviceData || []
+        serviceChart.value.update()
+      }
+
+      if (revenueChart.value && dashboardData?.chartData) {
+        revenueChart.value.data.labels = dashboardData.chartData.days || ['1', '2', '3', '4', '5', '6', '7']
+        revenueChart.value.data.datasets[0].data = dashboardData.chartData.revenueData || []
+        revenueChart.value.update()
+      }
+    } catch (error) {
+      console.error('Error refreshing dashboard:', error)
+    }
+  }, 5 * 60 * 1000)
+
+  // Clean up interval on component unmount
+  return () => {
+    clearInterval(refreshInterval)
+    if (serviceChart.value) serviceChart.value.destroy()
+    if (revenueChart.value) revenueChart.value.destroy()
+  }
 })
 
 </script>
