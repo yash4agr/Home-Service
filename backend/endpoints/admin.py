@@ -1,13 +1,14 @@
 from flask import Blueprint, jsonify, request, send_file
-from sqlalchemy import or_
+from sqlalchemy import func, and_
 from sqlalchemy.exc import SQLAlchemyError
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 import os
 
 from database.models import (
     db, UserLogin, UserAddress, Professional, 
-    ServiceRequest, ServiceStats, Services, Category
+    ServiceRequest, ServiceStats
 )
 
 admin_router = Blueprint("admin", __name__)
@@ -30,17 +31,80 @@ def admin_required():
 @admin_required()
 def dashboard():
 
-
-    stats = ServiceStats.get_instance()
-    return jsonify({"stats":{
-        "total_users": stats.total_users,
-        "total_professionals": stats.total_professionals,
-        "totalRequests": stats.total_services,
-        "total_completed_requests": stats.total_completed_requests,
-        "activeServices": stats.total_pending_requests,
-        "total_expired_requests": stats.total_expired_requests,
-        "avg_rating": stats.avg_rating}
+    service_stats = ServiceStats.get_instance()
+    
+    # stats
+    stats = {
+        'totalRequests': ServiceRequest.query.count(),
+        'activeServices': ServiceRequest.query.filter_by(
+                            status='accepted'
+                        ).count(),
+        'completionRate': calculate_completion_rate(),
+        'avg_rating': service_stats.avg_rating,
+    }
+    
+    # Calculate past 7 days service requests and revenue
+    service_data = get_past_seven_days_admin_data()
+    print(service_data)
+    return jsonify({
+        'stats': stats,
+        'serviceData': service_data['service_requests'],
+        'revenueData': service_data['revenue'],
+        'days': service_data['days']
     })
+
+def calculate_completion_rate():
+    total_requests = ServiceRequest.query.count()
+    completed_requests = ServiceRequest.query.filter_by(
+        status='completed'
+    ).count()
+
+    if total_requests == 0:
+        return 0
+    
+    return round((completed_requests / total_requests) * 100, 2)
+
+def get_past_seven_days_admin_data():
+    current_time = datetime.now(timezone.utc)
+    seven_days_ago = current_time - timedelta(days=7)
+    
+    daily_requests = db.session.query(
+        func.date(ServiceRequest.created_at).label('day'),
+        func.count(ServiceRequest.id).label('request_count')
+    ).filter(
+        ServiceRequest.created_at >= seven_days_ago
+    ).group_by('day').order_by('day').all()
+    
+    daily_revenue = db.session.query(
+        func.date(ServiceRequest.created_at).label('day'),
+        func.sum(ServiceRequest.total_amount).label('total_revenue')
+    ).filter(
+        and_(
+            ServiceRequest.created_at>= seven_days_ago,
+            ServiceRequest.status == 'completed',
+            ServiceRequest.total_amount.isnot(None)
+        )
+    ).group_by('day').order_by('day').all()
+
+    days = [(current_time - timedelta(days=x)).date() for x in range(6, -1, -1)]
+    service_requests = [0] * 7
+    revenue = [0.0] * 7
+    
+    for day, count in daily_requests:
+        day_date = datetime.strptime(day, '%Y-%m-%d').date()
+        if day_date in days:
+            service_requests[days.index(day_date)] = count
+    
+    for day, daily_total in daily_revenue:
+        day_date = datetime.strptime(day, '%Y-%m-%d').date()
+        if day_date in days:
+            revenue[days.index(day_date)] = round(daily_total or 0, 2)
+    
+    return {
+        'service_requests': service_requests,
+        'revenue': revenue,
+        'days': [day.strftime('%Y-%m-%d') for day in days]
+    }
 
 # User-related routes
 @admin_router.route("/users", endpoint="admin-get-users")
@@ -136,16 +200,18 @@ def professionals_reviews(user_id):
     service_requests = ServiceRequest.query.filter_by(professional_id=professional.id).all()
     return jsonify([{
         **request.to_dict(),
+        "review": request.review,
         "service_name": request.service.name,
         "customer_name": request.customer.name
     } for request in service_requests])
 
-@admin_router.route("/exportMonthlyReport", endpoint="export_monthly_report")
+@admin_router.route("/exportServiceRequest", endpoint="export_service_request")
 @jwt_required()
 @admin_required()
-def exportMonthlyReport():
-    
-    ## DEFINE SENT LOGIC
+def exportServiceRequest():
+    from celery_task import export_service_requests_to_csv
+    user = UserLogin.query.get(get_jwt_identity())
+    export_service_requests_to_csv(user.email)
 
     return jsonify({"message": "Monthly report scheduled"}), 200
 
@@ -159,10 +225,9 @@ def pending_verification():
         UserLogin.role == 'professional',
         Professional.is_approved == False
     ).all()
-
     if professionals:
         return jsonify([professional.to_dict() for professional in professionals]), 200
-    return jsonify({"message": "No professional found"}), 200
+    return jsonify({"message": "No professional found"}), 404
 
 
 

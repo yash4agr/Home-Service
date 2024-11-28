@@ -26,7 +26,14 @@ const fetchDashboardData = async ({ commit }) => {
   try {
     // Replace with actual API call
     const response = await axios.get('/api/admin/dashboard')
-    const data = await response.data
+    const data = {
+                stats: response.data.stats,
+                chartData: {
+                  serviceData: response.data.serviceData,
+                  revenueData: response.data.revenueData,
+                  days: response.data.days
+                }
+              }
     
     commit('SET_DASHBOARD_STATS', data.stats)
     commit('SET_DASHBOARD_CHART_DATA', data.chartData)
@@ -170,6 +177,7 @@ const fetchProfessionalReviews = async ({ commit }, userId) => {
   try {
     const response = await axios.get(`/api/admin/professionals/${userId}/reviews`)
     commit('SET_PROFESSIONAL_REVIEWS', response.data)
+    console.log(response.data)
     return response.data
   } catch (error) {
     console.error('Error fetching professional reviews:', error.message)
@@ -178,15 +186,15 @@ const fetchProfessionalReviews = async ({ commit }, userId) => {
 }
 
 // Export Monthly Report
-const exportMonthlyReport = async ({ commit }) => {
+const exportServiceRequest = async ({ commit }) => {
   try {
-    const response = await axios.get(`/api/admin/exportMonthlyReport`)
+    const response = await axios.get(`/api/admin/exportServiceRequest`)
     if (response.data) {
       return response.data
     }
     return false
   } catch (error) {
-    console.error('Error exporting monthly report:', error.message)
+    console.error('Error exporting Service Request:', error.message)
     throw error
   }
 }
@@ -271,7 +279,7 @@ export default {
   fetchUserAddress,
   fetchProfessionalDetails,
   fetchProfessionalReviews,
-  exportMonthlyReport,
+  exportServiceRequest,
   fetchProfessionalUsers,
   updateProfessionalStatus,
   downloadProfessionalResume,

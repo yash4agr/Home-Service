@@ -134,9 +134,7 @@ def create_booking():
             )
             service_requests.append(service_request)
         
-        # Add all service requests
             db.session.add(service_request)
-        # Commit changes
         db.session.commit()
         
         return jsonify({
@@ -146,6 +144,7 @@ def create_booking():
     
     except (SQLAlchemyError, ValueError) as e:
         db.session.rollback()
+        print(e)
         return jsonify({
             'message': str(e)
         }), 500
@@ -155,16 +154,10 @@ def create_booking():
 @jwt_required()
 def get_bookings():
     current_user_id = get_jwt_identity()
-    status = flask.request.args.get('status', default=None)
-    # professional_id = request.args.get('professional_id', None)
-    
-    # Base query for service requests
+
+    # Base qury
     query = ServiceRequest.query.filter_by(customer_id=current_user_id)
-    
-    # if status:
-    #     query = query.filter_by(status=status)
-    
-    # Fetch service requests with related data
+
     service_requests = query.all()
     
     booking_details = []
@@ -225,27 +218,10 @@ def submit_review():
     service_request.rating = rating
     service_request.review = review_text
     
-    # Update service and professional ratings
+    # Update ratings
     service_request.service.update_rating()
     service_request.professional.update_rating()
     
     db.session.commit()
     
     return jsonify({'message': 'Review submitted successfully'}), 200
-
-
-    
-
-
-def check_all_rejected(service_request):
-    customer_address = service_request.address
-    total_professionals = Professional.query.join(UserLogin).join(UserAddress).filter(
-        and_(
-            Professional.service_id == service_request.service_id,
-            UserAddress.zip_code == customer_address.zip_code
-        )
-    ).count()
-
-    rejections_count = ServiceRequestRejection.query.filter_by(service_request_id=service_request.id).count()
-
-    return total_professionals == rejections_count

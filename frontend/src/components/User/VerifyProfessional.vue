@@ -19,7 +19,7 @@ const selectedUser = ref(null)
 let searchTimeout = null
 
 // Get users from store
-const users = computed(() => store.getters['admin/professionals'] || [])
+const users = computed(() => store.getters['admin/ProfessionalsList'] || [])
 const userProfileDialogState = computed(() => store.getters['admin/userProfileDialogState'])
 const isLoading = computed(() => store.getters['admin/isUsersLoading'])
 const categories = computed(() => store.getters['admin/serviceCategories'])
@@ -42,7 +42,7 @@ const filteredUsers = computed(() => {
 
     const matchesCategory = !categoryId || user.category_id === categoryId
 
-    return matchesSearch && matchesCategory 
+    return matchesSearch && matchesCategory
   }) || []
 })
 
@@ -84,9 +84,9 @@ const handleDialogClose = () => {
 // Watch dialog state and fetch users only when opening
 watch(() => props.isOpen, (newValue) => {
   if (newValue) {
-    handleDialogOpen()
     store.dispatch('admin/fetchProfessionalUsers')
     store.dispatch('admin/fetchCategories')
+    handleDialogOpen()
   } else {
     handleDialogClose()
   }
@@ -207,17 +207,6 @@ onUnmounted(() => {
                   <h3>{{ user.name }}</h3>
                   <p class="user-email">{{ user.email }}</p>
                   <div class="user-meta">
-                    <span 
-                      class="user-role"
-                      :class="user.role"
-                    >
-                      {{ user.category }}
-                    </span>
-                    <span 
-                      class="user-banned"
-                    >
-                    {{ user.pin_code }}
-                    </span>
                   </div>
                 </div>
               </div>

@@ -201,6 +201,7 @@ class ServiceRequest(db.Model):
     date_of_completion = db.Column(db.DateTime(timezone=True), nullable=True)
     rating = db.Column(db.Integer, nullable=True)
     review = db.Column(db.Text, nullable=True)
+    total_amount = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -217,7 +218,8 @@ class ServiceRequest(db.Model):
             'date_of_request': self.date_of_request.isoformat(),
             'date_of_completion': self.date_of_completion.isoformat(),
             'rating':self.rating,
-            'total_reviewservices':self.review,
+            'review':self.review,
+            'total_amount':self.total_amount,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
@@ -226,9 +228,21 @@ class ServiceRequest(db.Model):
         """Complete the service request with rating and review"""
         self.status = 'completed'
         self.date_of_completion = datetime.now(timezone.utc)
+        
+        
+        if self.date_of_request.tzinfo is None:
+            self.date_of_request = self.date_of_request.replace(tzinfo=timezone.utc)
+        
         self.rating = rating
         self.review = review
-        
+
+        duration = (self.date_of_completion - self.date_of_request).total_seconds() / 3600
+        total = self.service.base_price * duration
+        if duration<1:
+            self.total_amount = round(self.service.base_price, 2)
+        else:
+            self.total_amount = round(total, 2)
+
         # Update average ratings
         self.service.update_rating()
         self.professional.update_rating()
@@ -249,7 +263,6 @@ class ServiceStats(db.Model):
 
     @classmethod
     def get_instance(cls):
-        """Get or create the singleton instance of ServiceStats"""
         stats = cls.query.first()
         if not stats:
             stats = cls()
@@ -259,7 +272,6 @@ class ServiceStats(db.Model):
     
     @classmethod
     def update_stats(cls):
-        """Update service statistics"""
         stats = cls.get_instance()
         
         stats.total_users = UserLogin.query.filter_by(role='user').count()
@@ -288,32 +300,32 @@ class ServiceStats(db.Model):
 #     """Listen for status changes in ServiceRequest"""
 #     if value != oldvalue:
 #         db.session.add(target)
-#         @event.listens_for(db.session, 'after_commit')
-#         def update_stats_after_commit(session):
+#         @event.listens_for(db.session, 'before_commit')
+#         def update_stats_before_commit(session):
 #             ServiceStats.update_stats()
-#             event.remove(db.session, 'after_commit', update_stats_after_commit)
+#             event.remove(db.session, 'before_commit', update_stats_before_commit)
 
 # @event.listens_for(Professional, 'after_insert')
 # def professional_created(mapper, connection, target):
 #     """Listen for new professional creation"""
-#     @event.listens_for(db.session, 'after_commit')
-#     def update_stats_after_commit(session):
+#     @event.listens_for(db.session, 'before_commit')
+#     def update_stats_before_commit(session):
 #         ServiceStats.update_stats()
-#         event.remove(db.session, 'after_commit', update_stats_after_commit)
+#         event.remove(db.session, 'before_commit', update_stats_before_commit)
 
 # @event.listens_for(Services, 'after_insert')
 # def service_created(mapper, connection, target):
 #     """Listen for new service creation"""
-#     @event.listens_for(db.session, 'after_commit')
-#     def update_stats_after_commit(session):
+#     @event.listens_for(db.session, 'before_commit')
+#     def update_stats_before_commit(session):
 #         ServiceStats.update_stats()
-#         event.remove(db.session, 'after_commit', update_stats_after_commit)
+#         event.remove(db.session, 'before_commit', update_stats_before_commit)
 
 # @event.listens_for(UserLogin, 'after_insert')
 # def user_created(mapper, connection, target):
 #     """Listen for new user creation"""
 #     if target.role == 'user':
-#         @event.listens_for(db.session, 'after_commit')
-#         def update_stats_after_commit(session):
+#         @event.listens_for(db.session, 'before_commit')
+#         def update_stats_before_commit(session):
 #             ServiceStats.update_stats()
-#             event.remove(db.session, 'after_commit', update_stats_after_commit)
+#             event.remove(db.session, 'before_commit', update_stats_before_commit)

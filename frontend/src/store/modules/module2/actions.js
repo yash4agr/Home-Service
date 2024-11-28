@@ -75,7 +75,6 @@ const submitReview = async ({ commit }, { bookingId, rating, comment }) => {
   commit('SET_ERROR', null)
       
   try {
-    console.log(rating, comment)
     const response = await axios.post('/api/bookings/submit_review', {
       "service_request_id": bookingId,
       "rating": rating,
@@ -100,8 +99,7 @@ const acceptService = async ({ commit }, serviceId) => {
   commit('SET_ERROR', null)
       
   try {
-    await axios.post('/api/professionals/service_actions', { "service_request_id" : bookingId, "action" : "accept"})
-    
+    await axios.post('/api/professionals/service_actions', { "service_request_id" : serviceId, "action" : "accept"})
     // Update the booking status
     commit('UPDATE_BOOKING', {
       id: serviceId,
@@ -119,7 +117,7 @@ const rejectService = async ({ commit }, serviceId) => {
   commit('SET_ERROR', null)
       
   try {
-    await axios.post('/api/professionals/service_actions', { "service_request_id" : bookingId, "action" : "reject"})
+    await axios.post('/api/professionals/service_actions', { "service_request_id" : serviceId, "action" : "reject"})
     
     // Update the booking status
     commit('UPDATE_BOOKING', {

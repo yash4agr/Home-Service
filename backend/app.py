@@ -31,12 +31,18 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 jwt = JWTManager(app)
 
 
+# Export files location
+app.config['EXPORT_FOLDER'] = '/database/export_files'
+
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
 # Initialize database
 db.init_app(app)
 
-CORS(app)
-app.config['WTF_CSRF_ENABLED'] = False
 
+CORS(app, resources={r"/*": {"origins": "*"}})
+app.config['WTF_CSRF_ENABLED'] = False
 
 # JWT error handlers
 @jwt.expired_token_loader
@@ -64,7 +70,7 @@ def get_location():
 
         # Make the request to Ola API
         response = requests.get(url)
-        response.raise_for_status()  # Raise an error for HTTP codes like 4XX/5XX
+        response.raise_for_status()
 
         # Send the result back to the frontend
         return jsonify(response.json()), 200
@@ -85,6 +91,10 @@ app.register_blueprint(bookings_router, url_prefix="/api/bookings")
 # Create the tables if they don't exist
 with app.app_context():
     db.create_all()
+
+# Initialize Celery
+from celery_config import init_celery
+celery = init_celery(app)
 
 if __name__ == "__main__":
     app.run(debug=True)

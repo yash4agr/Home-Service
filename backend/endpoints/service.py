@@ -52,7 +52,7 @@ def create_or_update_service():
                 if not category:
                     category = Category(name=form.new_category.data)
                     db.session.add(category)
-                    db.session.flush()
+                    db.session.commit()
                 category_id = category.id
             else:
                 category_id = form.category_id.data
@@ -92,6 +92,7 @@ def create_or_update_service():
         
     except Exception as e:
         db.session.rollback()
+        print(e)
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 @service_router.route("/services/<int:service_id>", methods=['DELETE'])

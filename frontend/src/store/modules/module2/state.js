@@ -15,7 +15,7 @@ export default {
 
     bookingDialogOpen: false,
     serviceHours: {},
-    servicingStates: ['Maharashtra', 'Karnataka', 'Tamil Nadu', 'Delhi', 'Gujarat'],
+    servicingStates: ['Chhattisgarh'],
     error: null,
     loading: false
   }

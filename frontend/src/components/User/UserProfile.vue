@@ -61,6 +61,7 @@ const refreshUserData = async (userId) => {
       store.dispatch('admin/fetchUserAddress', userId),
       isProfessional.value && store.dispatch('admin/fetchProfessionalDetails', userId),
       isProfessional.value && store.dispatch('admin/fetchProfessionalReviews', userId)
+      
     ])
     
     const updatedUser = store.getters['admin/getUserById'](userId)
@@ -233,19 +234,19 @@ watch(() => props.user?.id, (newId) => {
               
               <div class="stats-grid">
                 <div class="stat-item">
-                  <span class="stat-label">Total Services</span>
+                  <span class="stat-label">Total Services: </span>
                   <span class="stat-value">{{ professionalStats.totalServices }}</span>
                 </div>
                 <div class="stat-item">
-                  <span class="stat-label">Pending</span>
+                  <span class="stat-label">Pending: </span>
                   <span class="stat-value">{{ professionalStats.pendingServices }}</span>
                 </div>
                 <div class="stat-item">
-                  <span class="stat-label">Completed</span>
+                  <span class="stat-label">Completed: </span>
                   <span class="stat-value">{{ professionalStats.completedServices }}</span>
                 </div>
                 <div class="stat-item">
-                  <span class="stat-label">Rating</span>
+                  <span class="stat-label">Rating: </span>
                   <span class="stat-value">{{ professionalStats.averageRating.toFixed(1) }}/5</span>
                 </div>
               </div>
@@ -268,7 +269,7 @@ watch(() => props.user?.id, (newId) => {
                       {{ formatDate(review.created_at) }}
                     </div>
                   </div>
-                  <p class="review-comment">{{ review.comment }}</p>
+                  <p class="review-comment">{{ review.review }}</p>
                 </div>
               </div>
             </div>

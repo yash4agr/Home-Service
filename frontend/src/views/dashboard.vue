@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted  } from 'vue'
 import { useStore } from 'vuex'
 import { Chart } from 'chart.js/auto'
 
@@ -36,22 +36,6 @@ const userManagementDialogState = computed(() => store.getters['admin/userManage
 const VerifyProfessionalDialogDialogState = computed(() => store.getters['admin/verifyProfessionalDialogState'])
 
 
-// Computed Properties
-// const isAdmin = computed(() => true) // Replace with actual admin check from store
-const userData = computed(() => store.getters['module1/currentUser'])
-
-
-// Method to fetch dashboard data
-const fetchDashboardData = async () => {
-  try {
-    const response = await store.dispatch('dashboard/fetchData')
-    stats.value = response.stats
-    updateCharts(response.chartData)
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error)
-
-  }
-}
 
 const startTimer = () => {
   timeLeft.value = 30
@@ -69,73 +53,6 @@ const buttonText = computed(() => {
     ? `Export Monthly Report in ${timeLeft.value}s` 
     : 'Export Monthly Report'
 })
-
-// Initialize Charts
-const initializeCharts = () => {
-  if (!serviceChartRef.value || !revenueChartRef.value) return
-
-  // Service Requests Chart
-  const serviceCtx = serviceChartRef.value.getContext('2d')
-  serviceChart.value = new Chart(serviceCtx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [{
-        label: 'Service Requests',
-        data: [12, 19, 3, 5, 2, 3],
-        borderColor: '#dfbc90',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: 'Service Requests Over Time'
-        }
-      }
-    }
-  })
-
-  // Revenue/Rating Chart
-  const revenueCtx = revenueChartRef.value.getContext('2d')
-  revenueChart.value = new Chart(revenueCtx, {
-    type: 'bar',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [{
-        label: isAdmin.value ? 'Revenue' : 'Ratings',
-        data: [65, 59, 80, 81, 56, 55],
-        backgroundColor: '#dfbc90'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: isAdmin.value ? 'Monthly Revenue' : 'Monthly Ratings'
-        }
-      }
-    }
-  })
-}
-
-// Update Charts with New Data
-const updateCharts = (data) => {
-  if (serviceChart.value && data?.serviceData) {
-    serviceChart.value.data.datasets[0].data = data.serviceData
-    serviceChart.value.update()
-  }
-  
-  if (revenueChart.value && data?.revenueData) {
-    revenueChart.value.data.datasets[0].data = data.revenueData
-    revenueChart.value.update()
-  }
-}
 
 // Quick Action Handlers
 const handleCreateService = () => {
@@ -172,8 +89,8 @@ const handleExportReport = async () => {
   try {
     isDisabled.value = true
     
-    await store.dispatch('admin/exportMonthlyReport')
-    alert('Monthly report will be sent to your email within the next 24 hours')
+    await store.dispatch('admin/exportServiceRequest')
+    alert('Service Request detailed csv will be sent to your email within the next 24 hours')
     
     startTimer()
   } catch (error) {
@@ -183,40 +100,109 @@ const handleExportReport = async () => {
 }
 
 const handleVerifyProfessionals = () => {
+  store.dispatch('admin/fetchProfessionalUsers')
   store.dispatch('admin/toggleVerifyProfessionalDialog', true)
 }
 
 // Lifecycle Hook
 onMounted(async () => {
-  initializeCharts()
-  
   try {
     const dashboardData = await store.dispatch('admin/fetchDashboardData')
-    updateCharts(dashboardData.chartData)
+    if (serviceChart.value) {
+      serviceChart.value.destroy()
+      serviceChart.value = null
+    }
+    if (revenueChart.value) {
+      revenueChart.value.destroy()
+      revenueChart.value = null
+    }
+
+    // Ensure we have a fresh context each time
+    if (serviceChartRef.value && dashboardData?.chartData) {
+      const chartData = dashboardData.chartData
+      const serviceCtx = serviceChartRef.value.getContext('2d')
+      serviceChart.value = new Chart(serviceCtx, {
+        type: 'line',
+        data: {
+          labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
+          datasets: [{
+            label: 'Service Requests',
+            data: chartData.serviceData || [],
+            borderColor: '#dfbc90',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Service Requests Over Time'
+            }
+          }
+        }
+      })
+    }
+
+    if (revenueChartRef.value && dashboardData?.chartData) {
+      const chartData = dashboardData.chartData
+      const revenueCtx = revenueChartRef.value.getContext('2d')
+      revenueChart.value = new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+          labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
+          datasets: [{
+            label: 'Revenue',
+            data: chartData.revenueData || [],
+            backgroundColor: '#dfbc90'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Last 7 Days Revenue'
+            }
+          }
+        }
+      })
+    }
   } catch (error) {
     console.error('Error initializing dashboard:', error)
   }
 
-  const refreshInterval = setInterval(() => {
-    store.dispatch('admin/fetchDashboardData')
-      .then(data => updateCharts(data.chartData))
-      .catch(error => console.error('Error refreshing dashboard:', error))
+  const refreshInterval = setInterval(async () => {
+    try {
+      const dashboardData = await store.dispatch('admin/fetchDashboardData')
+      
+      // Completely recreate charts with new data
+      if (serviceChart.value && dashboardData?.chartData) {
+        serviceChart.value.data.labels = dashboardData.chartData.days || ['1', '2', '3', '4', '5', '6', '7']
+        serviceChart.value.data.datasets[0].data = dashboardData.chartData.serviceData || []
+        serviceChart.value.update()
+      }
+
+      if (revenueChart.value && dashboardData?.chartData) {
+        revenueChart.value.data.labels = dashboardData.chartData.days || ['1', '2', '3', '4', '5', '6', '7']
+        revenueChart.value.data.datasets[0].data = dashboardData.chartData.revenueData || []
+        revenueChart.value.update()
+      }
+    } catch (error) {
+      console.error('Error refreshing dashboard:', error)
+    }
   }, 5 * 60 * 1000)
 
   // Clean up interval on component unmount
-  return () => clearInterval(refreshInterval)
+  return () => {
+    clearInterval(refreshInterval)
+    if (serviceChart.value) serviceChart.value.destroy()
+    if (revenueChart.value) revenueChart.value.destroy()
+  }
 })
 
-// Expose methods if needed for template or parent components
-defineExpose({
-  fetchDashboardData,
-  initializeCharts,
-  updateCharts,
-  handleCreateService,
-  handleManageUsers,
-  handleExportReport,
-  handleVerifyProfessionals
-})
 </script>
 
 <!-- Dashboard.vue -->
@@ -239,8 +225,6 @@ defineExpose({
           <h2>Quick Actions</h2>
         </div>
         <div class="actions__buttons">
-          <!-- Admin Buttons -->
-          <template v-if="isAdmin">
             <button class="action-btn" @click="handleCreateService">
               Create Service
             </button>
@@ -276,23 +260,6 @@ defineExpose({
               @close="store.dispatch('admin/toggleVerifyProfessionalDialog', false)"
               @show-profile="handleUserProfile"
             />
-          </template>
-
-          <!-- Professional Buttons -->
-          <template v-else>
-            <button class="action-btn" @click="handleViewRequests">
-              View Requests
-            </button>
-            <button class="action-btn" @click="handlePendingServices">
-              Pending Services
-            </button>
-            <button class="action-btn" @click="handleUpdateProfile">
-              Update Profile
-            </button>
-            <button class="action-btn" @click="handleViewReviews">
-              View Reviews
-            </button>
-          </template>
         </div>
 
         <!-- Stats Cards -->

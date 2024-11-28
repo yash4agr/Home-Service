@@ -310,6 +310,7 @@ const isEditing = computed(() => !!props.serviceToEdit)
                   step="0.5"
                   class="form-input"
                   placeholder="Enter time required"
+                  disabled
                 />
               </div>
             </div>

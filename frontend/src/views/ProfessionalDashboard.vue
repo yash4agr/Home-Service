@@ -3,10 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { Chart } from 'chart.js/auto'
 
-import ServiceDialog from '@/components/Service/service.vue'
-import ServiceManagementDialog from '@/components/Service/ServiceManagementDialog.vue'
-import UserManagementDialog from '@/components/User/UserDialog.vue'
-import VerifyProfessionalDialog from '@/components/User/VerifyProfessional.vue'
+import RequestsDialog from '../components/Professionals/Requests.vue'
 
 // Store
 const store = useStore()
@@ -18,72 +15,80 @@ const revenueChartRef = ref(null)
 const serviceChart = ref(null)
 const revenueChart = ref(null)
 
-// Dialog state management
-const isServiceDialogOpen = ref(false)
-const isManageDialogOpen = ref(false)
-const selectedService = ref(null)
-
-// Timer
-const isDisabled = ref(false)
-const timeLeft = ref(0)
 
 // Computed properties from store
-const isApproved = computed(() => true)
+const isApproved = computed(() => store.getters['professional/isApproved'])
 const stats = computed(() => store.getters['professional/dashboardStats'])
-
-const serviceDialogState = computed(() => store.getters['admin/serviceDialogState'])
-const serviceManagementDialogState = computed(() => store.getters['admin/serviceManagementDialogState'])
-const userManagementDialogState = computed(() => store.getters['admin/userManagementDialogState'])
-const VerifyProfessionalDialogDialogState = computed(() => store.getters['admin/verifyProfessionalDialogState'])
-
-
-// Computed Properties
-// const isAdmin = computed(() => true) // Replace with actual admin check from store
-const userData = computed(() => store.getters['module1/currentUser'])
 
 
 // Method to fetch dashboard data
 const fetchDashboardData = async () => {
     try {
-        const response = await store.dispatch('dashboard/fetchData')
-        stats.value = response.stats
+        const response = await store.dispatch('professional/fetchDashboardData')
         updateCharts(response.chartData)
     } catch (error) {
         console.error('Error fetching dashboard data:', error)
-
     }
 }
 
-const startTimer = () => {
-    timeLeft.value = 30
-    const timer = setInterval(() => {
-        timeLeft.value--
-        if (timeLeft.value <= 0) {
-            clearInterval(timer)
-            isDisabled.value = false
-        }
-    }, 1000)
+const isRequestsOpen = ref(false)
+const title = ref('')
+const requests = ref([])
+
+const updateRequestsOpen = (value) => {
+    isRequestsOpen.value = value
 }
 
-const buttonText = computed(() => {
-    return timeLeft.value > 0
-        ? `Export Monthly Report in ${timeLeft.value}s`
-        : 'Export Monthly Report'
-})
+const handleNewRequests = async() => {
+    title.value = "New Requests"
+    isRequestsOpen.value = true
+    try {
+        const response = await store.dispatch('professional/get_bookings', 'pending_request')
+        requests.value = response.pending_request
+    } catch (error) {
+        console.error('Error fetching new requests:', error)
+        requests.value = []
+    }
+}
+
+const handlePendingServices = async() => {
+    title.value = "Pending Services"
+    isRequestsOpen.value = true
+    try {
+        const response = await store.dispatch('professional/get_bookings', 'accepted_request')
+        requests.value = response.accepted_request
+    } catch (error) {
+        console.error('Error fetching pending services:', error)
+        requests.value = []
+    }
+}
+
+const handlePastServices = async() => {
+    title.value = "Past Services"
+    isRequestsOpen.value = true
+    try {
+        const response = await store.dispatch('professional/get_bookings', 'past_request')
+        requests.value = response.past_request
+    } catch (error) {
+        console.error('Error fetching past services:', error)
+        requests.value = []
+    }
+}
+
 
 // Initialize Charts
 const initializeCharts = () => {
     if (!serviceChartRef.value || !revenueChartRef.value) return
-
+    const chartData = store.getters['professional/dashboardChartData']
     // Service Requests Chart
     const serviceCtx = serviceChartRef.value.getContext('2d')
     serviceChart.value = new Chart(serviceCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
             datasets: [{
                 label: 'Service Requests',
-                data: [12, 19, 3, 5, 2, 3],
+                data: chartData.serviceData || [],
                 borderColor: '#dfbc90',
                 tension: 0.4
             }]
@@ -105,10 +110,10 @@ const initializeCharts = () => {
     revenueChart.value = new Chart(revenueCtx, {
         type: 'bar',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: chartData.days || ['1', '2', '3', '4', '5', '6', '7'],
             datasets: [{
                 label: 'Ratings',
-                data: [65, 59, 80, 81, 56, 55],
+                data: chartData.revenueData || [],
                 backgroundColor: '#dfbc90'
             }]
         },
@@ -118,7 +123,7 @@ const initializeCharts = () => {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Monthly Ratings'
+                    text: 'Last 7 Days Ratings'
                 }
             }
         }
@@ -138,68 +143,19 @@ const updateCharts = (data) => {
     }
 }
 
-// Quick Action Handlers
-const handleCreateService = () => {
-    store.dispatch('admin/openServiceDialog')
-}
-
-const closeServiceDialog = () => {
-    isServiceDialogOpen.value = false
-    selectedService.value = null
-}
-
-
-const handleManageService = () => {
-    store.dispatch('admin/toggleServiceManagementDialog', true)
-}
-
-const handleServiceEdit = (service) => {
-    store.dispatch('admin/toggleServiceManagementDialog', false)
-    store.dispatch('admin/openServiceDialog', service)
-}
-
-const handleManageUsers = () => {
-    store.dispatch('admin/toggleUserManagementDialog', true)
-}
-
-const handleUserProfile = (user) => {
-    store.commit('admin/SET_USER_PROFILE_DIALOG', { isOpen: true, user });
-}
-const handleCloseUserProfile = () => {
-    store.commit('admin/SET_USER_PROFILE_DIALOG', { isOpen: false, user: null });
-}
-
-const handleExportReport = async () => {
-    try {
-        isDisabled.value = true
-
-        await store.dispatch('admin/exportMonthlyReport')
-        alert('Monthly report will be sent to your email within the next 24 hours')
-
-        startTimer()
-    } catch (error) {
-        console.error('Error generating report:', error)
-        isDisabled.value = false
-    }
-}
-
-const handleVerifyProfessionals = () => {
-    store.dispatch('admin/toggleVerifyProfessionalDialog', true)
-}
-
 // Lifecycle Hook
 onMounted(async () => {
+    await store.dispatch('professional/status')
     initializeCharts()
-
     try {
-        const dashboardData = await store.dispatch('admin/fetchDashboardData')
+        const dashboardData = await store.dispatch('professional/fetchDashboardData')
         updateCharts(dashboardData.chartData)
     } catch (error) {
         console.error('Error initializing dashboard:', error)
     }
 
     const refreshInterval = setInterval(() => {
-        store.dispatch('admin/fetchDashboardData')
+        store.dispatch('professional/fetchDashboardData')
             .then(data => updateCharts(data.chartData))
             .catch(error => console.error('Error refreshing dashboard:', error))
     }, 5 * 60 * 1000)
@@ -208,22 +164,12 @@ onMounted(async () => {
     return () => clearInterval(refreshInterval)
 })
 
-// Expose methods if needed for template or parent components
-defineExpose({
-    fetchDashboardData,
-    initializeCharts,
-    updateCharts,
-    handleCreateService,
-    handleManageUsers,
-    handleExportReport,
-    handleVerifyProfessionals
-})
 </script>
 
 <!-- Dashboard.vue -->
 <template>
     <div class="dashboard">
-        <template v-if="isApproved">
+        <template v-if="!isApproved">
             <div class="not_approved">
                 <h2>You are not approved yet</h2>
             </div>
@@ -255,7 +201,8 @@ defineExpose({
                         <button class="action-btn" @click="handlePastServices">
                             Past Services
                         </button>
-
+                        <RequestsDialog :is-bookings-open="isRequestsOpen" :bookings-data="requests" :title="title"
+                            @update:is-bookings-open="updateRequestsOpen" />
                     </div>
 
                     <!-- Stats Cards -->
@@ -298,6 +245,7 @@ defineExpose({
     max-width: 1400px;
     margin: 0 auto;
 }
+
 .not_approved {
     display: flex;
     flex-direction: column;

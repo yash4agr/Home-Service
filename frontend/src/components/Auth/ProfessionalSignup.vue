@@ -7,7 +7,7 @@ import { useStore } from "vuex";
 const SERVICE_CATEGORIES = computed(() => store.getters['admin/serviceCategories']);
 
 const STATES = [
-  "Maharashtra", "Karnataka", "Tamil Nadu", "Delhi", "Gujarat"
+  "Chhattisgarh"
 ];
 
 const COUNTRIES = ["India"];
@@ -111,7 +111,7 @@ const validateStepTwo = () => {
   }
 
   // Years of Experience Validation
-  if (!professionalData.value.yearsOfExperience) {
+  if (professionalData.value.yearsOfExperience>=0) {
     errorMessages.value.yearsOfExperience = "Experience is required";
     isValid = false;
   } else {
@@ -218,6 +218,7 @@ const handleProfessionalSignup = async () => {
     isLoading.value = true;
     submitError.value = "";
     const response = await store.dispatch('module1/registerProfessional', professionalData.value);
+    closeDialog()
     router.push('/professional-dashboard');
   } catch (error) {
     submitError.value = error.response?.data?.message || "Signup failed. Please try again.";

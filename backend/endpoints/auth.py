@@ -49,6 +49,7 @@ def register():
     
     except Exception as e:
         db.session.rollback()
+        print(e)
         return jsonify({ "message": "An internal error occurred", "error": str(e) }), 500
 
 @auth_router.route("/login", methods=["POST"], endpoint="auth-login")
@@ -156,27 +157,18 @@ def verify_otp():
     if otp == stored_otp.decode('utf-8'):
         user = UserLogin.query.filter_by(email=email).first()
         
-        if verification_type == 'email-verification':
-            user.is_email_verified = True
-        
+        user.is_email_verified = True
         db.session.commit()
 
         return jsonify({
             "message": "OTP verified successfully",
             "verified": True,
-            # Add any additional user data if needed
         }), 200
     else:
         return jsonify({
             "message": "Invalid OTP",
             "verified": False
         }), 400
-
-    # return jsonify({
-    #         "message": "OTP verified successfully",
-    #         "verified": True,
-    #         # Add any additional user data if needed
-    #     }), 200
 
 @auth_router.route("/resend-otp", methods=["POST"])
 def resend_otp():
@@ -196,17 +188,14 @@ def resend_otp():
             "message": "User not found",
         }), 404
 
-    # Generate new OTP
     new_otp = generate_otp()
     
     # Store new OTP
     store_otp(email, new_otp, verification_type)
     
-    # Send OTP via email
     try:
         send_otp_email(email, new_otp)
     except Exception as e:
-        # Log the error
         print(f"Email sending failed: {str(e)}")
         return jsonify({
             "message": "Failed to send OTP. Please try again.",

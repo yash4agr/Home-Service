@@ -115,7 +115,7 @@ function toggleTheme() {
       <div class="navbar-container">
         <div class="navbar-left">
           <RouterLink to="/" class="navbar-logo">
-            <img src="@/assets/vue.svg" alt="Logo" class="h-8 w-auto" />
+            <img src="@/assets/logo.png" alt="Logo" class="h-8 w-auto"/>
           </RouterLink>
           <div class="location-picker" @click="getCurrentLocation">
             <i class="ri-map-pin-line" aria-hidden="true"></i>

@@ -17,7 +17,7 @@ const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
 // States for India (reusing from your example)
 const STATES = {
     "India": [
-        "Maharashtra", "Karnataka", "Tamil Nadu", "Delhi", "Gujarat"
+        "Chhattisgarh"
     ]
 };
 

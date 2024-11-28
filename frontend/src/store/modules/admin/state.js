@@ -28,7 +28,8 @@ export default {
     },
     chartData: {
       serviceData: [],
-      revenueData: []
+      revenueData: [],
+      days: []
     }
   },
   

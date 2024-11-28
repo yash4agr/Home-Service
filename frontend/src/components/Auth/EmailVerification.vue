@@ -157,7 +157,6 @@ const handleSubmit = (e) => {
 
 const resendOTP = async () => {
   if (!canResend.value || isResending.value) return;
-  console.log("1")
   isResending.value = true;
   errorMessage.value = "";
   successMessage.value = "";
@@ -409,7 +408,7 @@ onUnmounted(() => {
 }
 
 .error-message {
-  color: var(--error-color);
+  color: var(--white);
   text-align: center;
 }
 
