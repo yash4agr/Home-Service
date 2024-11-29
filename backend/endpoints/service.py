@@ -1,3 +1,4 @@
+
 from flask import Blueprint, jsonify, request, json
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,8 +9,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from database.models import db, UserLogin, UserAddress, Professional, Services, Category
 from forms import ServiceForm
 from utils import handle_image_upload, handle_image_delete
+from cache import cache
+
 
 service_router = Blueprint("service", __name__)
+
 
 def admin_required(f):
     @wraps(f)
@@ -22,12 +26,16 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+
 @service_router.route("/services/categories", methods=['GET'])
+@cache.cached(timeout=60, key_prefix='categories')
 def get_categories():
     categories = Category.query.all()
     return jsonify([category.to_dict() for category in categories])
 
 @service_router.route("/services", methods=['GET'])
+@cache.cached(timeout=60, key_prefix='services')
 def get_services():
     services = Services.query.all()
     return jsonify([service.to_dict() for service in services])

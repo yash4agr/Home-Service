@@ -20,32 +20,6 @@ from utils import (
 
 from app import celery
 
-# Configure Celery 
-# celery = Celery('tasks', broker='redis://localhost:6379/0')
-
-# celery.conf.update(
-#     broker_transport_options={
-#         'visibility_timeout': 3600,
-#         'polling_interval': 10.0,
-#     },
-#     worker_prefetch_multiplier=1,
-#     task_acks_late=True
-# )
-
-# celery.conf.beat_schedule = {
-#     'daily-professional-reminders': {
-#         'task': 'tasks.send_daily_professional_reminders',
-#         'schedule': 60 * 60 * 24,
-#     },
-#     'monthly-activity-report': {
-#         'task': 'tasks.send_monthly_activity_report',
-#         'schedule': 60 * 60 * 24 * 30,
-#     },
-#     'check-expired-service-requests': {
-#         'task': 'tasks.check_expired_service_requests',
-#         'schedule': 60 * 60 * 12,
-#     }
-# }
 
 @celery.task
 def send_daily_professional_reminders():
@@ -170,7 +144,6 @@ def export_service_requests_to_csv(admin_email):
                 'total_amount': request.total_amount
             })
     
-    # Email CSV to admin
     msg = MIMEMultipart()
     msg['From'] = SENDER_ADDRESS
     msg['To'] = admin_email
@@ -184,7 +157,6 @@ def export_service_requests_to_csv(admin_email):
     
     msg.attach(attachment)
     
-    # Send email
     try:
         smtp_server = smtplib.SMTP(SMTP_SERVER_HOST, SMTP_SERVER_PORT)
         smtp_server.login(SENDER_ADDRESS, SENDER_PASSWORD)
@@ -197,7 +169,7 @@ def export_service_requests_to_csv(admin_email):
 
 @celery.task
 def check_expired_service_requests():
-    current_time = lambda: datetime.now(timezone.utc)
+    current_time = datetime.now(timezone.utc)
     twenty_four_hours_ago = current_time - timedelta(hours=24)
     
     pending_requests = ServiceRequest.query.filter(

@@ -125,7 +125,7 @@ class Services(db.Model):
             'time_required': self.time_required,
             'category_id': self.category_id,
             'tags': self.tags or [],
-            'rating': self.avg_rating,
+            'rating': round(self.avg_rating, 2),
             'total_requests':self.total_requests,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
@@ -142,7 +142,7 @@ class Services(db.Model):
             ServiceRequest.rating.isnot(None)
         ).first()
         
-        self.avg_rating = result.avg_rating or 0.0
+        self.avg_rating = round(result.avg_rating, 2) or 0.0
         self.total_requests = result.total_requests or 0
 
 class Professional(db.Model):
@@ -168,7 +168,7 @@ class Professional(db.Model):
             'category': self.category_id,
             'experience': self.experience,
             'resume_path': 'http://localhost:5000/'+self.resume_path,
-            'rating':self.avg_rating,
+            'rating': round(self.avg_rating, 2),
             'total_services':self.total_services,
             'is_approved': self.is_approved,
             'created_at': self.created_at.isoformat(),
@@ -185,7 +185,7 @@ class Professional(db.Model):
             ServiceRequest.rating.isnot(None)
         ).first()
         
-        self.avg_rating = result.avg_rating or 0.0
+        self.avg_rating = round(result.avg_rating) or 0.0
         self.total_services = result.total_services or 0
 
 class ServiceRequest(db.Model):
@@ -217,7 +217,7 @@ class ServiceRequest(db.Model):
             'status': self.status,
             'date_of_request': self.date_of_request.isoformat(),
             'date_of_completion': self.date_of_completion.isoformat(),
-            'rating':self.rating,
+            'rating': round(self.rating, 2),
             'review':self.review,
             'total_amount':self.total_amount,
             'created_at': self.created_at.isoformat(),
@@ -291,41 +291,6 @@ class ServiceStats(db.Model):
             ServiceRequest.date_of_completion.isnot(None)
         ).first()
         
-        stats.avg_rating = completed_requests.avg_rating or 0.0
+        stats.avg_rating = round(completed_requests.avg_rating, 2) or 0.0
         
         db.session.commit()
-
-# @event.listens_for(ServiceRequest.status, 'set')
-# def service_request_status_change(target, value, oldvalue, initiator):
-#     """Listen for status changes in ServiceRequest"""
-#     if value != oldvalue:
-#         db.session.add(target)
-#         @event.listens_for(db.session, 'before_commit')
-#         def update_stats_before_commit(session):
-#             ServiceStats.update_stats()
-#             event.remove(db.session, 'before_commit', update_stats_before_commit)
-
-# @event.listens_for(Professional, 'after_insert')
-# def professional_created(mapper, connection, target):
-#     """Listen for new professional creation"""
-#     @event.listens_for(db.session, 'before_commit')
-#     def update_stats_before_commit(session):
-#         ServiceStats.update_stats()
-#         event.remove(db.session, 'before_commit', update_stats_before_commit)
-
-# @event.listens_for(Services, 'after_insert')
-# def service_created(mapper, connection, target):
-#     """Listen for new service creation"""
-#     @event.listens_for(db.session, 'before_commit')
-#     def update_stats_before_commit(session):
-#         ServiceStats.update_stats()
-#         event.remove(db.session, 'before_commit', update_stats_before_commit)
-
-# @event.listens_for(UserLogin, 'after_insert')
-# def user_created(mapper, connection, target):
-#     """Listen for new user creation"""
-#     if target.role == 'user':
-#         @event.listens_for(db.session, 'before_commit')
-#         def update_stats_before_commit(session):
-#             ServiceStats.update_stats()
-#             event.remove(db.session, 'before_commit', update_stats_before_commit)

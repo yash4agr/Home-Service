@@ -45,7 +45,6 @@ def dashboard():
     
     # Calculate past 7 days service requests and revenue
     service_data = get_past_seven_days_admin_data()
-    print(service_data)
     return jsonify({
         'stats': stats,
         'serviceData': service_data['service_requests'],
@@ -168,8 +167,15 @@ def professionals_details(user_id):
     user = Professional.query.filter_by(user_login_id = user_id).first()
     if not user:
         return jsonify({ "message": f"No Professinal found with id: { user_id }" }), 404
-    
-    return jsonify(user.to_dict())
+    detail = user.to_dict()
+    total_requests = ServiceRequest.query.filter_by(professional_id=user.id).count()
+    pending_requests = ServiceRequest.query.filter_by(
+        professional_id=user.id, 
+        status='accepted'
+    ).count()
+    detail["total_requests"] = total_requests
+    detail["pending_requests"] = pending_requests
+    return jsonify(detail)
 
 @admin_router.route("/professionals/<int:user_id>/resume", endpoint="get_professional_resume")
 @jwt_required()
@@ -211,7 +217,7 @@ def professionals_reviews(user_id):
 def exportServiceRequest():
     from celery_task import export_service_requests_to_csv
     user = UserLogin.query.get(get_jwt_identity())
-    export_service_requests_to_csv(user.email)
+    export_service_requests_to_csv.delay(user.email)
 
     return jsonify({"message": "Monthly report scheduled"}), 200
 

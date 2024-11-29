@@ -15,6 +15,9 @@ from endpoints.bookings import bookings_router
 
 # Import database, stuff
 from database.models import db, UserLogin
+from celery_config import init_celery
+from cache import cache
+import redis
 
 
 # Initialize Flask instance
@@ -28,14 +31,25 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{}'.format(db_path) # to-do, 
 app.config['JWT_SECRET_KEY'] = "someSecretKey" # to-do, read from env file
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+
+# Redis cache config
+app.config['CACHE_TYPE'] = 'redis'
+app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_PORT'] = 6379
+app.config['CACHE_REDIS_DB'] = 1
+
+cache.init_app(app)
+
+redis_client = redis.Redis(host='localhost', port=6379, db=1)
+
 jwt = JWTManager(app)
 
 
 # Export files location
 app.config['EXPORT_FOLDER'] = '/database/export_files'
 
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/2'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/3'
 
 # Initialize database
 db.init_app(app)
@@ -93,7 +107,6 @@ with app.app_context():
     db.create_all()
 
 # Initialize Celery
-from celery_config import init_celery
 celery = init_celery(app)
 
 if __name__ == "__main__":
