@@ -77,7 +77,7 @@ onMounted(() => {
                     <span v-for="i in 5 - Math.ceil(service.rating)">
                       <i class="ri-star-line" /></span>
                 </span>
-                <span class="rating-number">{{ service.rating }}/5</span>
+                <span class="rating-number">{{ service.rating.toFixed(2) }}/5</span>
               </div>
               <div class="price">
                 Starting from ₹{{ service.base_price }}

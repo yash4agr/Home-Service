@@ -38,8 +38,11 @@ const SET_PROFESSIONAL_SIGNUP_DIALOG = (state, value) => {
 
 // Verification and reset mutations
 const UPDATE_EMAIL_VERIFICATION = (state, value) => {
-  state.isEmailVerified = value;
-  state.emailVerificationStatus = value;
+  let userData = JSON.parse(localStorage.getItem('user'))
+  userData.isVerified = true
+  localStorage.setItem('user', JSON.stringify(userData))
+  state.isEmailVerified = true;
+  state.emailVerificationStatus = true;
 }
 const SET_RESET_PASSWORD_VERIFIED = (state, { email, verified }) => {
     state.resetPasswordVerified = verified;

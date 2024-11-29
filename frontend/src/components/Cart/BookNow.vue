@@ -136,6 +136,7 @@ const handleSubmit = async () => {
         closeDialog();
         cartItems.value = [];
         cartItems.value.update()
+        router.go(0)
         router.push('/?bookings=true');
     } catch (error) {
         errorMessage.value = error.response?.data?.message || "Booking failed. Please try again.";

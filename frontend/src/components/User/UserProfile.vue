@@ -26,10 +26,10 @@ const isProfessional = computed(() => props.user?.role === 'professional')
 const isAdmin = computed(() => props.user?.role === 'admin')
 
 const professionalStats = computed(() => ({
-  totalServices: store.state.admin.userDetails?.stats?.totalServices || 0,
-  pendingServices: store.state.admin.userDetails?.stats?.pendingServices || 0,
-  completedServices: store.state.admin.userDetails?.stats?.completedServices || 0,
-  averageRating: store.state.admin.userDetails?.stats?.averageRating || 0,
+  totalServices: store.state.admin.userDetails?.professionalDetails?.total_requests || 0,
+  pendingServices: store.state.admin.userDetails?.professionalDetails?.pending_requests || 0,
+  completedServices: store.state.admin.userDetails?.professionalDetails?.total_services || 0,
+  averageRating: store.state.admin.userDetails?.professionalDetails?.rating || 0,
 }))
 
 const formatDate = (date) => {
@@ -263,7 +263,7 @@ watch(() => props.user?.id, (newId) => {
                 >
                   <div class="review-header">
                     <div class="review-rating">
-                      ★ {{ review.rating }}/5
+                      ★ {{ review.rating.toFixed(2) }}/5
                     </div>
                     <div class="review-date">
                       {{ formatDate(review.created_at) }}

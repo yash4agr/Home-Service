@@ -111,7 +111,8 @@ const validateStepTwo = () => {
   }
 
   // Years of Experience Validation
-  if (professionalData.value.yearsOfExperience>=0) {
+  console.log(professionalData.value.yearsOfExperience)
+  if (!professionalData.value.yearsOfExperience.toString()) {
     errorMessages.value.yearsOfExperience = "Experience is required";
     isValid = false;
   } else {

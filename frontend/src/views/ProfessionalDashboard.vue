@@ -210,7 +210,7 @@ onMounted(async () => {
                     <div class="stats-cards">
                         <div class="stat-card">
                             <h3>Average Rating</h3>
-                            <p>{{ stats.avg_rating }}</p>
+                            <p>{{ stats.avg_rating.toFixed(2) }}</p>
                         </div>
                         <div class="stat-card">
                             <h3>Total Requests</h3>

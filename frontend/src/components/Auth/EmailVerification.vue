@@ -110,7 +110,8 @@ const handleVerificationSuccess = async (response) => {
         closeDialog();
     } else {
         await store.dispatch("module1/updateEmailVerification", true);
-        await router.push(route.query.fromBooking ? (route.query.redirectTo || "/service-booking") : "/");
+        await router.push("/");
+        router.go(0)
     }
   } catch (error) {
     console.error("Post-verification Error:", error);
@@ -243,7 +244,6 @@ onMounted(async () => {
      currentRoute.query["reset-password"] === "true") && 
     currentRoute.query.email
   ) {
-    // Initialize verification on mount if we have the required query params
     // await initializeVerification();
   }
 });
