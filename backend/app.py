@@ -1,5 +1,6 @@
 # Import libraries
 import os
+from dotenv import load_dotenv
 import requests
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager
@@ -19,6 +20,7 @@ from celery_config import init_celery
 from cache import cache
 import redis
 
+load_dotenv()
 
 # Initialize Flask instance
 app = Flask(__name__)
@@ -28,28 +30,32 @@ db_path = os.path.join(os.path.dirname(__file__), 'database', 'hsa.sqlite3')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{}'.format(db_path) # to-do, read from env file
 
 # JWT config
-app.config['JWT_SECRET_KEY'] = "someSecretKey" # to-do, read from env file
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'someSecretKey')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 
+redis_host = os.environ.get('REDIS_HOST', 'redis')
+redis_port = int(os.environ.get('REDIS_PORT', 6379))
+
 # Redis cache config
 app.config['CACHE_TYPE'] = 'redis'
-app.config['CACHE_REDIS_HOST'] = 'localhost'
-app.config['CACHE_REDIS_PORT'] = 6379
+app.config['CACHE_REDIS_HOST'] = redis_host
+app.config['CACHE_REDIS_PORT'] = redis_port
 app.config['CACHE_REDIS_DB'] = 1
 
 cache.init_app(app)
 
-redis_client = redis.Redis(host='localhost', port=6379, db=1)
+redis_client = redis.Redis(host=redis_host, port=redis_port, db=1, decode_responses=True)
 
 jwt = JWTManager(app)
 
+OLA_API_KEY = os.environ.get('OLA_API_KEY')
 
 # Export files location
 app.config['EXPORT_FOLDER'] = '/database/export_files'
 
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/2'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/3'
+app.config['CELERY_BROKER_URL'] = f'redis://{redis_host}:6379/2'
+app.config['CELERY_RESULT_BACKEND'] = f'redis://{redis_host}:6379/3'
 
 # Initialize database
 db.init_app(app)
@@ -80,7 +86,7 @@ def get_location():
         longitude = data.get("longitude")
 
         # Construct the Ola API URL
-        url = f"https://api.olamaps.io/places/v1/reverse-geocode?latlng={latitude},{longitude}&api_key=TdZk7h7BkXqq1rlcmlkGnGSYgPDqo3TlQaMWzBoR"
+        url = f"https://api.olamaps.io/places/v1/reverse-geocode?latlng={latitude},{longitude}&api_key={OLA_API_KEY}"
 
         # Make the request to Ola API
         response = requests.get(url)
@@ -110,4 +116,4 @@ with app.app_context():
 celery = init_celery(app)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

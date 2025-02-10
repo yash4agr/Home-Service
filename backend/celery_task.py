@@ -118,7 +118,9 @@ def export_service_requests_to_csv(admin_email):
     
     # Generate unique filename
     filename = f'service_requests_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-    filepath = os.path.join(current_app.config.get('EXPORT_FOLDER', '/tmp'), filename)
+    export_folder = current_app.config.get('EXPORT_FOLDER', '/tmp')
+    os.makedirs(export_folder, exist_ok=True)
+    filepath = os.path.join(export_folder, filename)
     print(filepath)
     
     # Create CSV

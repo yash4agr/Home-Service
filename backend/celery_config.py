@@ -1,4 +1,5 @@
 from celery import Celery
+import os
 
 def init_celery(app):
     celery = Celery(
@@ -9,11 +10,14 @@ def init_celery(app):
     )
     celery.conf.update(
         broker_transport_options={
-            # 'visibility_timeout': 3600,
+            'visibility_timeout': 3600,
             'polling_interval': 10.0,
         },
         worker_prefetch_multiplier=1,
-        task_acks_late=True
+        task_acks_late=True,
+        broker_connection_retry_on_startup=True,
+        redis_host=os.environ.get('REDIS_HOST', 'redis'),
+        redis_port=int(os.environ.get('REDIS_PORT', 6379))
     )
 
     celery.conf.beat_schedule = {
