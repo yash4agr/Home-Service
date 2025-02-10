@@ -4,7 +4,7 @@
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-![Best Course Project Certificate](readme_assets\certificate.png)
+![Best Course Project Certificate](readme_assets/certificate.png)
 </div>
 
 ## 🏆 Recognition
@@ -266,8 +266,8 @@ docker compose exec backend python -c "import redis; redis.Redis(host='redis').p
 - Ensure the path is correct for your environment
 
 ## 📱 Screenshots
-![Home page screenshot](readme_assets\home_ss.png)
-![Dashboard page screenshot](readme_assets\dashboard_ss.png)
+![Home page screenshot](readme_assets/home_ss.png)
+![Dashboard page screenshot](readme_assets/dashboard_ss.png)
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome! Feel free to check [issues page](link-to-issues).
